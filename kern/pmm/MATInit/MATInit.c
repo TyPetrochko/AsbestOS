@@ -7,6 +7,13 @@
 #define VM_USERLO_PI	(VM_USERLO / PAGESIZE)
 #define VM_USERHI_PI	(VM_USERHI / PAGESIZE)
 
+// round an address to the next highest page offset
+// 		i.e. ceiling_page(PAGESIZE - 15) = PAGESIZE
+unsigned int ceiling_page(unsigned int addr);
+// round an address to the next lowest page offset
+// 		i.e. floor_page(PAGESIZE + 15) = PAGESIZE
+unsigned int floor_page(unsigned int addr);
+
 /**
  * The initialization function for the allocation table AT.
  * It contains two major parts:
@@ -19,23 +26,32 @@ void
 pmem_init(unsigned int mbi_addr)
 {
   unsigned int nps;
-
-  // TODO: Define your local variables here.
+	unsigned int num_rows;
+	unsigned int highest_addr;
 
   //Calls the lower layer initializatin primitives.
   //The parameter mbi_addr shell not be used in the further code.
 	devinit(mbi_addr);
-
   /**
    * Calculate the number of actual number of avaiable physical pages and store it into the local varaible nps.
    * Hint: Think of it as the highest address possible in the ranges of the memory map table,
    *       divided by the page size.
    */
-  // TODO
+
+	num_rows = get_size();
+
+	// Iterate over all rows in physical memory map and find the highest address possible
+	for(unsigned int i = 0; i < num_rows; i++){
+		if(is_usable(i) && get_mms(i) + get_mml(i) > highest_addr){
+			highest_addr = get_mms(i) + get_mml(i);
+			nps = highest_addr / PAGESIZE;
+		}
+	}
 
 	set_nps(nps); // Setting the value computed above to NUM_PAGES.
+	return;
 
-  /**
+	/**
    * Initialization of the physical allocation table (AT).
    *
    * In CertiKOS, the entire addresses < VM_USERLO or >= VM_USERHI are reserved by the kernel.
@@ -59,7 +75,51 @@ pmem_init(unsigned int mbi_addr)
    *    That means there may be some gaps between the ranges.
    *    You should still set the permission of those pages in allocation table to 0.
    */
-  // TODO
+
+	// init low-end kernel-reserved pages
+	for(int i = 0; i < VM_USERLO_PI; i++){
+		at_set_perm(i, 1);
+	}
+
+	// init high-end kernel-reserved pages
+	for(int i = VM_USERHI_PI; i < nps; i++){
+		at_set_perm(i, 1);
+	}
+
+	// init unusable range between num_pages and 2^20
+	unsigned int at_size = 1 << 20;
+	for(int i = nps; i < at_size; i++){
+		at_set_perm(i, 0);
+	}
+
+	// init all pages to BIOS-only by default (memory map may not cover them)
+	for(int i = VM_USERLO_PI; i < VM_USERHI_PI; i++){
+		at_set_perm(i, 0);
+	}
+
+	// map the rest of the pages by range, according to mem-map
+	unsigned int start;
+	unsigned int end;
+	for(unsigned int i = 0; i < num_rows; i++){
+		if(is_usable(i)){
+			start = ceiling_page(get_mms(i));
+			end = floor_page(get_mms(i) + get_mml(i));
+
+			for(unsigned int j = start; j <= end; j++){
+				at_set_perm(j, 2);
+			}
+		}
+	}
 }
 
+unsigned int ceiling_page(unsigned int addr){
+	if(addr % PAGESIZE == 0){
+		return addr;
+	}else{
+		return floor_page(addr) + PAGESIZE;
+	}
+}
 
+unsigned int floor_page(unsigned int addr){
+	return addr - (addr % PAGESIZE);
+}
