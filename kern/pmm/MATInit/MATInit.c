@@ -49,8 +49,7 @@ pmem_init(unsigned int mbi_addr)
 	}
 
 	set_nps(nps); // Setting the value computed above to NUM_PAGES.
-	return;
-
+	
 	/**
    * Initialization of the physical allocation table (AT).
    *
@@ -76,16 +75,6 @@ pmem_init(unsigned int mbi_addr)
    *    You should still set the permission of those pages in allocation table to 0.
    */
 
-	// init low-end kernel-reserved pages
-	for(int i = 0; i < VM_USERLO_PI; i++){
-		at_set_perm(i, 1);
-	}
-
-	// init high-end kernel-reserved pages
-	for(int i = VM_USERHI_PI; i < nps; i++){
-		at_set_perm(i, 1);
-	}
-
 	// init unusable range between num_pages and 2^20
 	unsigned int at_size = 1 << 20;
 	for(int i = nps; i < at_size; i++){
@@ -102,14 +91,29 @@ pmem_init(unsigned int mbi_addr)
 	unsigned int end;
 	for(unsigned int i = 0; i < num_rows; i++){
 		if(is_usable(i)){
-			start = ceiling_page(get_mms(i));
-			end = floor_page(get_mms(i) + get_mml(i));
+			unsigned int bottom_addr = get_mms(i);
+			unsigned int top_addr = bottom_addr + get_mml(i);
+			unsigned int ceil = ceiling_page(bottom_addr);
+			unsigned int floor = floor_page(top_addr);
 
+			start = (ceiling_page(get_mms(i))) / PAGESIZE;
+			end = (floor_page(get_mms(i) + get_mml(i))) / PAGESIZE;
 			for(unsigned int j = start; j <= end; j++){
 				at_set_perm(j, 2);
 			}
 		}
 	}
+
+	// init low-end kernel-reserved pages
+	for(int i = 0; i < VM_USERLO_PI; i++){
+		at_set_perm(i, 1);
+	}
+
+	// init high-end kernel-reserved pages
+	for(int i = VM_USERHI_PI; i < nps; i++){
+		at_set_perm(i, 1);
+	}
+
 }
 
 unsigned int ceiling_page(unsigned int addr){

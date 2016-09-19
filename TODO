@@ -1,0 +1,12 @@
+DONE:
+- Set up MATIntro layer
+- prototype of MATInit layer
+- Debug MATIntro layer
+- design palloc part
+
+TODO:
+- custom test cases for each
+- enrichment:
+	-> formatted printing
+	-> backtrace
+- answer questions
