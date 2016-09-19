@@ -95,10 +95,10 @@ QEMUOPTS_BIOS	:= -L $(UTILSDIR)/qemu/
 
 # Targets
 
-.PHONY: all boot kern deps qemu qemu-nox qemu-gdb
+.PHONY: all boot kern user deps qemu qemu-nox qemu-gdb user_lib user_procs
 
 
-all: boot kern
+all: boot kern user link
 	@./make_image.py
 ifdef TEST
 	@echo "***"
@@ -144,6 +144,9 @@ qemu-nox-gdb: $(CERTIKOS_IMG) pre-qemu
 	@echo "***"
 	$(V)$(QEMU) -nographic $(QEMUOPTS) -S
 
+gdb: pre-qemu
+	@gdb
+
 qemu-kvm: $(CERTIKOS_IMG)
 	$(V)$(QEMU) $(QEMUOPTS) $(QEMUOPTS_KVM)
 
@@ -162,8 +165,12 @@ cscope:
 	$(V)find . -name "*.[chsS]" > cscope.files
 	$(V)cscope -bkq -i cscope.files
 
+user: user_lib user_procs gen
+
+
 # Sub-makefiles
 include boot/Makefile.inc
+include user/Makefile.inc
 include kern/Makefile.inc
 
 deps: $(OBJDIR)/.deps
