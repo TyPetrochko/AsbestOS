@@ -1,0 +1,12 @@
+1)
+The processor starts executing in 32-bit mode when it sets the protected mode enable flag at line 107 of boot1.S. 
+
+The following snippet loads the global descriptor table (GDT) descriptor into the GDT, sets the protected flag, and then, since the program is now in 32-bit mode, makes a long jump (cross-segment) to a section responsible for calling the C functions.
+
+	lgdt		gdtdesc
+	movl		%cr0, %eax
+	orl		$CR0_PE_ON, %eax	# flag is enabled on this line
+	movl		%eax, %cr0
+	ljmp		$PROT_MODE_CSEG, $protcseg
+
+2)
