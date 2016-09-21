@@ -1,5 +1,67 @@
-sudo apt-get install libc6-dev-i386
+Tyler completed question 1, the "Formatted Printing" enrichment section, and wrote the test cases. Alex completed questions 2, 3, and 4. Both of us worked on the required coding sections independently. The actual code submitted was written by Tyler, and this section of the README was written by Alex.
 
+For the MATIntro layer we set and got values from the struct at the index in the array AT corresponding to the page index. For the MATInit layer, we set the number of pages to be the start address of the last row in the allocation table, plus its length in bytes, minus 1, divided by the size of a page. We then set the permissions for all pages reserved by the kernel to be 1, and the rest to 0. For the pages set to 0, we changed them to 2 if they were contained in a row which was usable. For the MATOp layer, we defined palloc by scanning through the page table looking for an unallocated page to return. This was optimized by saving the index of the last page allocated, and starting the search at the next page (and looping back to the first page index not reserved by the kernel after reaching the highest page index.)
 
-Notice:
-* Our elf loader cannot initialize static variable. Thus, please make sure to initialize static variable manually in user process.
+For the Formatted Printing enrichment section, we added a switch case inside the vprintfmt function in kern/lib/printfmt.c that handles formatting octal numbers.
+
+Testing: We wrote a single additional test case for the MATOp layer. It keeps calling palloc() until no more memory is available (keeping track of all allocated pages), frees the last allocated page, verifies that it was freed, calls alloc() again, and verifies that the page returned by alloc() is equal to the page that was just freed. This is a rough sanity check that every single page is actually used up (if it weren't, calling alloc() after freeing the last page might give a different page).
+
+Question A:
+
+1) The processor starts executing in 32-bit mode after it sets the protected mode enable flag at line 107 of boot1.S:
+
+	orl		$CR0_PE_ON, %eax
+
+The following snippet loads the global descriptor table (GDT) descriptor into the GDT, sets the protected flag, and then, since the program is now in 32-bit mode, makes a long jump (cross-segment) to a section responsible for calling the C functions.
+
+	lgdt		gdtdesc
+	movl		%cr0, %eax
+	orl		$CR0_PE_ON, %eax	# flag is enabled on this line
+	movl		%eax, %cr0
+	ljmp		$PROT_MODE_CSEG, $protcseg
+
+2) The last instruction executed by the bootloader is "jmp *%edx" on line 10 of exec_kernel.S and at memory address 0x8f0d. This instruction causes the next instruction executed to be the one located at the memory address contained in the edx register. The first instruction executed by the kernel is "cli", which clears the interrupt flag.
+
+3) This instruction is located on line 21 of entry.S, and at memory address 0x001023e0.
+
+4) The kernel is a binary file in the ELF (Executable and Linkable File) format. In the bootloader's load_kernel function, it first reads in the first 8 sectors, which should constitute the header of the ELF (if e_magic is not equal to the pre defined number ELF_MAGIC, then the sectors do not constitute the header of an ELF.) The ELF header contains information about each program segment; ph_off gives the offset to the first program header struct which defines each program segment, and ph_num gives the total number of program headers. Each program header contains both the offset (where does the program start) and the size (how many bytes in total) for each program. The bootloader can divide the size in bytes by the size of 1 sector to obtain the number of sectors to read from the offset for each program. Reading every program from a program header defined in the ELF header constitutes reading in the entire kernel.
+
+Question B (enrichment):
+
+1) The code inside dprintf.c is the highest-level implementation of the functionality responsible for printing a printf-style formatted string. It processes the variable list of arguments to be formatted inside the string (passed as additional arguments to the dprintf function), and maintains a buffer of text to be output to the console. Once the console buffer is full or ready to be flushed, the cons_putc function exported by console.c is used to print the buffered text to the serial I/O port and text-mode VGA display.
+
+2) The code snippet 
+
+if (terminal.crt_pos >= CRT_SIZE) {
+    int i;
+    memmove(terminal.crt_buf, terminal.crt_buf + CRT_COLS,
+        (CRT_SIZE - CRT_COLS) * sizeof(uint16_t));
+    for (i = CRT_SIZE - CRT_COLS; i < CRT_SIZE; i++)
+        terminal.crt_buf[i] = 0x0700 | ' ';
+    terminal.crt_pos -= CRT_COLS;
+}
+
+... is responsible for moving the text currently displayed by the text-mode VGA display "up" a full line. It does this by copying all the data in the buffer after the first line to the beginning of the buffer (via the memmove function). Next, it fills the last line of the display buffer with whitespace characters, then moves the current position within the buffer to the beginning of the last line (rather than the last char of the last line).
+
+3.1) In the call to dprintf(), fmt points to the address of the string "x %d, y %x, z %d\n", which, in this case, is at memory location 0x103662. The variable ap points to the address of the first argument after fmt, which would be the variable x. Because the stack actually grows "down" (towards lower memory addresses), ap will point to the address of fmt plus the length of a char pointer.
+
+3.2) First, vdprintf is called. This is followed by three calls to va_arg. Before the first call, ap points to the address of the variable x (sitting on the stack), and afterwards points to the address of the variable y. Invoking va_arg again makes ap point to the address of the next argument (z), and the third invocation points ap to the address of whatever is "beneath" z in the stack (which is sizeof(int) bytes greater than what it used to be).
+
+It's important to note that va_arg is called three times before cons_putc is ever called because console I/O is buffered via the putch function (buffer size is 512, so it's never filled). Once putch has been called fourteen times (the length of the string with formatting substitutions, i.e. substituting "x" for the first "%d"), the cputs method is invoked, which results in fourteen calls to cons_putc. The first time consputc is called, its argument is a pointer to the console buffer's address. The second time, it points to one more than the the console buffer's address (to print the second char) and so forth, until the last call which points to the newline character at the end of the buffer.
+
+The next time dprintf is called (such as when the "$> " bash prompt is printed), the entire process is repeated.
+
+4) The output is "He110 World"
+
+This works because when the vprintfmt function sees the "%x" inside the first argument passed to dprintf, it calls the getuint function, which then uses va_arg to get an unsigned int from the stack (the next argument passed to dprintf), which in this case is 57616. It then converts it to base-16 and prints it. In base-16, 57616 is E110, which explains the three characters after the capital H.
+
+When vprintfmt sees the "%s" in the string passed to drintf, it pops a pointer off the stack. It then follows that pointer, and prints every character it encounters until it reaches a null string. Each character is interpreted as ASCII, which explains why 0x00646c72 is interpreted as "rld" with a terminating null char. Little endian systems store numbers right-to-left (high-to-low addresses): 0x72 maps to ASCII character "r", 0x6c maps to ASCII "l", 0x64 maps to ASCII "d", and 0x00 maps to the null character. Ultimately, this means 0x00646c72 is interpreted as the string "rld" (which explains the last three chars of the message).
+
+If this system were big-endian, the variable i would have to be set to 0x726c6400, since it would be stored left-to-right, i.e. in ascending order, just as strings are read. However, this doesn't change the fact that decimal 57616 is equal to hex E110, so we could leave that argument the same.
+
+5) The value printed after "y=" is whatever is next in the stack (at a higher address space) after the unsigned integer 3. More specifically, va_arg adds sizeof(int) to the address of the first parameter, and interprets whatever is in that address location as an unsigned int.
+
+In my case, this happened to be the value "9477988".
+
+6) If GCC pushed arguments on the stack in declaration order, the dprintf function could be changed so that the last argument called is the number of additional arguments. Then, the function could call va_arg once to get the number "n" of arguments, then call va_arg n times, before calling it once more to get the string from the stack.
+
