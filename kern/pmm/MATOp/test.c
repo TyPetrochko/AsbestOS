@@ -7,7 +7,7 @@ int MATOp_test1()
   int page_index = palloc();
   if (page_index < 262144) {
     pfree(page_index);
-    dprintf("test 1 failed.\n");
+    dprintf("test 1 failed. min is 262144, got %u \n", page_index);
     return 1;
   }
   if (at_is_norm(page_index) != 1) {
@@ -45,8 +45,67 @@ int MATOp_test1()
  */
 int MATOp_test_own()
 {
-  // TODO (optional)
-  // dprintf("own test passed.\n");
+	unsigned int pages [1 << 20];
+	unsigned int index = 0;
+
+	// use up all memory
+	unsigned int tmp;
+	while((tmp = palloc()) != 0){
+		pages[index++] = tmp;
+
+		// abort if allocation failed
+		if(!at_is_allocated(tmp)){
+			dprintf("couldn't allocate page %u", pages[tmp]);
+			while(index > 0) pfree(pages[--index]);
+			return 1;
+		}
+	}
+
+	// free the last allocated page
+	pfree(pages[--index]);
+
+	// make sure it was actually freed
+	if(at_is_allocated(pages[index])){
+		dprintf("couldn't free page %u\n", pages[index]);
+		while(index > 0) pfree(pages[--index]);
+		return 1;
+	}
+
+	// make sure that the last freed page was re-allocated
+	if((tmp = palloc()) != pages[index]){
+		dprintf("allocated page %u, should be %u\n", tmp, pages[index]);
+		pfree(tmp);
+		while(index > 0) pfree(pages[--index]);
+		return 1;
+	}
+
+	// make sure it was actually allocated
+	if(!at_is_allocated(pages[index])){
+		dprintf("couldn't allocated page %u\n", pages[index]);
+		while(index > 0) pfree(pages[--index]);
+		return 1;
+	}
+
+	// free all used pages
+	index++;
+	while(index > 0){
+		// make sure this page is allocated
+		if(!at_is_allocated(pages[--index])){
+			dprintf("page %u was already freed\n", pages[index]);
+			while(index > 0) pfree(pages[--index]);
+			return 1;
+		}
+		// free this page
+		pfree(pages[index]);
+		// make sure this page was freed
+		if(at_is_allocated(pages[index])){
+			dprintf("couldn't free page %u\n", pages[index]);
+			while(index > 0) pfree(pages[--index]);
+			return 1;
+		}
+	}
+
+  dprintf("own test passed.\n");
   return 0;
 }
 
