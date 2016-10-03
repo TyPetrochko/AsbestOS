@@ -76,6 +76,5 @@ void idptbl_init(unsigned int mbi_adr)
     // TODO: define your local variables here.
     //
     container_init(mbi_adr);
-    set
     // TODO
 }
