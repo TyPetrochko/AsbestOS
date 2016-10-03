@@ -2,6 +2,12 @@
 
 #include "import.h"
 
+#define PAGESIZE    4096
+#define VM_USERLO   0x40000000
+#define VM_USERHI   0xF0000000
+#define VM_USERLO_PI    (VM_USERLO / PAGESIZE)
+#define VM_USERHI_PI    (VM_USERHI / PAGESIZE)
+
 /**
  * Returns the page table entry corresponding to the virtual address,
  * according to the page structure of process # [proc_index].
@@ -77,7 +83,11 @@ void idptbl_init(unsigned int mbi_adr)
 	int i, j;
 	for(i = 0; i < 1024; i++){
 		for(j = 0; j < 1024; j++){
-			set_ptbl_entry_identity(i, j, PTE_P | PTE_W | PTE_G);
+            if (i * 1024 + j < VM_USERLO_PI || i * 1024 + j >= VM_USERHI_PI) {
+                set_ptbl_entry_identity(i, j, PTE_P | PTE_W | PTE_G);
+            } else {
+                set_ptbl_entry_identity(i, j, PTE_P | PTE_W);
+            }
 		}
 	}
 }
