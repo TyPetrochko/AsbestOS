@@ -10,8 +10,17 @@
 unsigned int get_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
     unsigned int page_dir_entry_index = vaddr >> 22;
-    unsigned int page_table_entry_index = ((vaddr >> 12) & 0x003FF);
-    return get_ptbl_entry(proc_index, page_dir_entry_index, page_table_entry_index);
+    unsigned int page_table_entry_index = ((vaddr << 10) >> 22);
+    unsigned int table_entry = get_ptbl_entry(proc_index, page_dir_entry_index, page_table_entry_index);
+    unsigned int dir_entry = get_pdir_entry(proc_index, page_dir_entry_index);
+
+    if (table_entry & PTE_P == 0) {
+        return 0;
+    } else if (dir_entry & PTE_P == 0) {
+        return 0;
+    } else {
+        return table_entry;
+    }
 
 }         
 
@@ -19,14 +28,20 @@ unsigned int get_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 unsigned int get_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
      unsigned int page_dir_entry_index = vaddr >> 22;
-     return get_pdir_entry(proc_index, page_dir_entry_index);
+     unsigned int dir_entry = get_pdir_entry(proc_index, page_dir_entry_index);
+
+     if (dir_entry & PTE_P == 0) {
+        return 0;
+     } else {
+        return dir_entry;
+     }
 }
 
 // removes the page table entry for the given virtual address
 void rmv_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 {
     unsigned int page_dir_entry_index = vaddr >> 22;
-    unsigned int page_table_entry_index = ((vaddr >> 12) & 0x003FF);
+    unsigned int page_table_entry_index = ((vaddr << 10) >> 22);
     rmv_ptbl_entry(proc_index, page_dir_entry_index, page_table_entry_index);
 }
 
@@ -42,7 +57,7 @@ void rmv_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr)
 void set_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr, unsigned int page_index, unsigned int perm)
 {
     unsigned int page_dir_entry_index = vaddr >> 22;
-    unsigned int page_table_entry_index = ((vaddr >> 12) & 0x003FF);
+    unsigned int page_table_entry_index = ((vaddr << 10) >> 22);
     set_ptbl_entry(proc_index, page_dir_entry_index, page_table_entry_index, page_index, perm);
 }
 
@@ -58,12 +73,9 @@ void set_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr, unsigned 
 // while the permission for the rest should be PTE_P and PTE_W.
 void idptbl_init(unsigned int mbi_adr)
 {
-	container_init(mbi_adr);
+    // TODO: define your local variables here.
+    //
+    container_init(mbi_adr);
 
-	int i, j;
-	for(i = 0; i < 1024; i++){
-		for(j = 0; j < 1024; j++){
-			set_ptbl_entry_identity(i, j, PTE_P | PTE_W | PTE_G);
-		}
-	}
+    // TODO
 }
