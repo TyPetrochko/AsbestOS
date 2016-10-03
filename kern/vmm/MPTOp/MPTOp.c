@@ -14,9 +14,9 @@ unsigned int get_ptbl_entry_by_va(unsigned int proc_index, unsigned int vaddr)
     unsigned int table_entry = get_ptbl_entry(proc_index, page_dir_entry_index, page_table_entry_index);
     unsigned int dir_entry = get_pdir_entry(proc_index, page_dir_entry_index);
 
-    if (table_entry & PTE_P == 0) {
+    if ((table_entry & PTE_P) == 0) {
         return 0;
-    } else if (dir_entry & PTE_P == 0) {
+    } else if ((dir_entry & PTE_P) == 0) {
         return 0;
     } else {
         return table_entry;
@@ -30,7 +30,7 @@ unsigned int get_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr)
      unsigned int page_dir_entry_index = vaddr >> 22;
      unsigned int dir_entry = get_pdir_entry(proc_index, page_dir_entry_index);
 
-     if (dir_entry & PTE_P == 0) {
+     if ((dir_entry & PTE_P) == 0) {
         return 0;
      } else {
         return dir_entry;
@@ -76,6 +76,6 @@ void idptbl_init(unsigned int mbi_adr)
     // TODO: define your local variables here.
     //
     container_init(mbi_adr);
-
+    set
     // TODO
 }

@@ -5,7 +5,7 @@ int MPTOp_test1()
 {
   unsigned int vaddr = 4096*1024*300;
   if (get_ptbl_entry_by_va(10, vaddr) != 0) {
-    dprintf("test 1 failed 1.\n");
+    dprintf("test 1 failed 1, %d.\n", get_pdir_entry_by_va(10, vaddr));
     return 1;
   }
   if (get_pdir_entry_by_va(10, vaddr) != 0) {
