@@ -73,9 +73,11 @@ void set_pdir_entry_by_va(unsigned int proc_index, unsigned int vaddr, unsigned 
 // while the permission for the rest should be PTE_P and PTE_W.
 void idptbl_init(unsigned int mbi_adr)
 {
-    // TODO: define your local variables here.
-    //
-    container_init(mbi_adr);
-
-    // TODO
+	container_init(mbi_adr);
+	int i, j;
+	for(i = 0; i < 1024; i++){
+		for(j = 0; j < 1024; j++){
+			set_ptbl_entry_identity(i, j, PTE_P | PTE_W | PTE_G);
+		}
+	}
 }
