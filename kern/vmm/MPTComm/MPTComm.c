@@ -25,8 +25,16 @@ void pdir_init(unsigned int mbi_adr)
  */
 unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vadr)
 {
-  // TODO
-  return 0;
+	unsigned int allocated_page = container_alloc(proc_index);
+	if(allocated_page == 0)
+		return 0;
+
+	unsigned int pdir = get_pdir_entry_by_va(proc_index, vadr);
+	set_pdir_entry(proc_index, vadr, allocated_page);
+	for(int i = 0; i < 1024; i++)
+		set_ptbl_entry_by_va(proc_index, vadr, 0, 0);
+
+  return allocated_page;
 }
 
 // Reverse operation of alloc_ptbl.
@@ -34,5 +42,7 @@ unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vadr)
 // and frees the page for the page table entries (with container_free).
 void free_ptbl(unsigned int proc_index, unsigned int vadr)
 {
-  // TODO
+	unsigned int page_to_free = get_pdir_entry_by_va(proc_index, vadr) >> 12;
+	container_free(proc_index, page_to_free);
+	rmv_ptbl_entry_by_va(proc_index, vadr);
 }
