@@ -27,17 +27,15 @@ void pdir_init_kern(unsigned int mbi_adr)
 unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int page_index, unsigned int perm)
 {   
   unsigned int page_dir_entry = get_pdir_entry_by_va(proc_index, vadr);
-  if (page_dir_entry & PTE_P == 0) {
-  	alloc_ptbl(proc_index, page_index);
+  if ((page_dir_entry & PTE_P) == 0) {
+
+  	unsigned int retval = alloc_ptbl(proc_index, vadr);
+  	if (retval == 0) return MagicNumber;
   } 
 
   set_ptbl_entry_by_va(proc_index, vadr, page_index, perm);
-  unsigned int page_tbl_entry = get_ptbl_entry_by_va(proc_index, vadr);
-  if (page_tbl_entry & PTE_P == 0) {
-  	return MagicNumber;
-  } else {
-  	return page_tbl_entry >> 12;
-  }
+ 
+  return (get_pdir_entry_by_va(proc_index, vadr) >> 12);
 }
 
 /**
