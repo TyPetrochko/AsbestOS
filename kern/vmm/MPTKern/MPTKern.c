@@ -34,7 +34,7 @@ unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int p
   set_ptbl_entry_by_va(proc_index, vadr, page_index, perm);
   unsigned int page_tbl_entry = get_ptbl_entry_by_va(proc_index, vadr);
   if (page_tbl_entry & PTE_P == 0) {
-  	return MagicNumber
+  	return MagicNumber;
   } else {
   	return page_tbl_entry >> 12;
   }
