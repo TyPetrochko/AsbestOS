@@ -120,13 +120,16 @@ unsigned int container_alloc(unsigned int id)
   /*
    * TODO: implement the function here.
    */
-	if(CONTAINER[id].quota = CONTAINER[id].usage)
+	if(CONTAINER[id].quota == CONTAINER[id].usage)
 		return 0;
 
 	unsigned int toReturn = palloc();
 
-	if(toReturn != 0)
+	if(toReturn != 0) {
 		CONTAINER[id].usage++;
+  } else {
+    return 0;
+  }
 
   return toReturn;
 }
