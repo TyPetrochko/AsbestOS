@@ -55,6 +55,7 @@ void sys_puts(void)
 extern uint8_t _binary___obj_user_pingpong_ping_start[];
 extern uint8_t _binary___obj_user_pingpong_pong_start[];
 extern uint8_t _binary___obj_user_pingpong_ding_start[];
+extern uint8_t _binary___obj_user_fork_fork_start[];
 
 /**
  * Spawns a new child process.
@@ -66,8 +67,8 @@ extern uint8_t _binary___obj_user_pingpong_ding_start[];
  * The linker ELF addresses for those compiled binaries are defined above.
  * Since we do not yet have a file system implemented in mCertiKOS,
  * we statically loading the ELF binraries in to the memory based on the
- * first parameter [elf_id], i.e., ping, pong, and ding corresponds to
- * the elf_id of 1, 2, and 3, respectively.
+ * first parameter [elf_id], i.e., ping, pong, ding and fork corresponds to
+ * the elf_id of 1, 2, 3, and 4, respectively.
  * If the parameter [elf_id] is none of those three, then it should return
  * NUM_IDS with the error number E_INVAL_PID. The same error case apply
  * when the proc_create fails.
