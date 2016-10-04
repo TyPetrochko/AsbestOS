@@ -24,13 +24,13 @@ void pdir_init(unsigned int mbi_adr)
 
     for (int i = 0; i < NUM_IDS; i++) {
     	for (int j = 0; j < VM_USERLO_PI / NUM_PG_DIRS; j++) {
-    		set_pdir_entry(i, j);
+    		set_pdir_entry_identity(i, j);
     	}
     	for (int j = VM_USERHI_PI /NUM_PG_DIRS; j < VM_USERHI_PI / NUM_PG_DIRS; j++) {
-    		set_pdir_entry_identity(i, j, 0);
+    		set_pdir_entry(i, j, 0);
     	}
     	for (int j = VM_USERHI_PI / NUM_PG_DIRS; j < NUM_PG_DIRS; j++) {
-    		set_pdir_entry(i, j);
+    		set_pdir_entry_identity(i, j);
     	}
     }
 }
