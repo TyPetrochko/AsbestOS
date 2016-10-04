@@ -48,10 +48,14 @@ unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vadr)
 	if(allocated_page == 0)
 		return 0;
 
-	unsigned int pdir = get_pdir_entry_by_va(proc_index, vadr);
 	set_pdir_entry_by_va(proc_index, vadr, allocated_page);
-	for(int i = 0; i < 1024; i++)
-		set_ptbl_entry_by_va(proc_index, vadr, 0, 0);
+
+	//for(int i = 0; i < 1024; i++)
+	//	set_ptbl_entry_by_va(proc_index, vadr, 0, 0);
+	unsigned int page_index = allocated_page;
+	for(unsigned int addr = page_index << 12; addr < (page_index + 1) << 12; addr += 4){
+    *(unsigned int *)addr &= 0x00000000; 
+  }
 
   return allocated_page;
 }
@@ -62,6 +66,6 @@ unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vadr)
 void free_ptbl(unsigned int proc_index, unsigned int vadr)
 {
 	unsigned int page_to_free = get_pdir_entry_by_va(proc_index, vadr) >> 12;
-	container_free(proc_index, page_to_free);
-	rmv_ptbl_entry_by_va(proc_index, vadr);
+	container_free(proc_index, (page_to_free >> 12));
+	rmv_pdir_entry_by_va(proc_index, vadr);
 }
