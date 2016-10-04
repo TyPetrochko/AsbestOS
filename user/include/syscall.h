@@ -48,4 +48,18 @@ sys_yield(void)
 		     : "cc", "memory");
 }
 
+static gcc_inline pid_t
+sys_fork(void)
+{
+	pid_t pid;
+
+	asm volatile("int %1" 
+			 :"=b" (pid)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_fork)
+		     : "cc", "memory");
+
+	return pid;
+}
+
 #endif

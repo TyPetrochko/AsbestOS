@@ -56,6 +56,9 @@ void syscall_dispatch(void)
 		 */
 		sys_yield();
 		break;
+	case SYS_fork:
+		sys_fork();
+		break;
 	default:
 		syscall_set_errno(E_INVAL_CALLNR);
 	}

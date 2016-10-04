@@ -13,6 +13,7 @@ USER_LDFLAGS	:= $(LDFLAGS) -m elf_i386 -Ttext=0x40000000 -e _start
 include $(USER_DIR)/lib/Makefile.inc
 include $(USER_DIR)/idle/Makefile.inc
 include $(USER_DIR)/pingpong/Makefile.inc
+include $(USER_DIR)/fork/Makefile.inc
 
 user: lib idle pingpong
 	@echo All targets of user are done.
