@@ -3,17 +3,18 @@
 
 #include "import.h"
 
+#define NUM_DIRS 1024
 /**
  * Sets the entire page map for process 0 as identity map.
  * Note that part of the task is already completed by pdir_init.
  */
 void pdir_init_kern(unsigned int mbi_adr)
 {
-    // TODO: define your local variables here.
-
     pdir_init(mbi_adr);
     
-    //TODO
+    for (int i = 0; i < NUM_DIRS; i++) {
+    	set_pdir_entry_identity(0, i);
+    }
 }
 
 /**
@@ -25,8 +26,18 @@ void pdir_init_kern(unsigned int mbi_adr)
  */
 unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int page_index, unsigned int perm)
 {   
-  // TODO
-  return 0;
+  unsigned int page_dir_entry = get_pdir_entry_by_va(proc_index, vadr, page_index);
+  if (page_dir_entry & PTE_P == 0) {
+  	alloc_ptbl(proc_index, page_index);
+  } 
+
+  set_ptbl_entry_by_va(proc_index, vadr, page_index, perm);
+  unsigned int page_tbl_entry = get_ptbl_entry_by_va(proc_index, vadr);
+  if (page_tbl_entry & PTE_P == 0) {
+  	return MagicNumber
+  } else {
+  	return page_tbl_entry >> 12;
+  }
 }
 
 /**
