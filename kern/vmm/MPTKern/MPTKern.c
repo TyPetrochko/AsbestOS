@@ -50,6 +50,11 @@ unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int p
  */
 unsigned int unmap_page(unsigned int proc_index, unsigned int vadr)
 {
-  // TODO
-  return 0;
+  unsigned int entry = get_ptbl_entry_by_va(proc_index, vadr);
+  if (entry & PTE_P == 0) {
+  	return 0;
+  } else {
+  	rmv_ptbl_entry_by_va(proc_index, vadr);
+  	return entry;
+  }
 }   
