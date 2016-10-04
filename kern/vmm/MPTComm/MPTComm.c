@@ -52,7 +52,6 @@ unsigned int alloc_ptbl(unsigned int proc_index, unsigned int vadr)
 
 	for(int i = 0; i < 1024; i++)
 		set_ptbl_entry_by_va(proc_index, vadr, 0, 0);
-
   return allocated_page;
 }
 
