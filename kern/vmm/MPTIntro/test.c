@@ -65,9 +65,15 @@ int MPTIntro_test2()
  */
 int MPTIntro_test_own()
 {
-  // TODO (optional)
-  // dprintf("own test passed.\n");
-  return 0;
+	set_pdir_entry_identity(1, 2);
+	set_ptbl_entry_identity(2, 3, 7);
+
+	if(get_ptbl_entry(1, 2, 3) != ((2 * 1024 + 3) << 12) + 7){
+		dprintf("My test failed.\n");
+		return 1;
+	}
+	dprintf("My tests passed\n");
+	return 0;
 }
 
 int test_MPTIntro()
