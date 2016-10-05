@@ -41,8 +41,18 @@ int MPTNew_test1()
  */
 int MPTNew_test_own()
 {
-  // TODO (optional)
-  // dprintf("own test passed.\n");
+  //confirm that alloc_page doesn't give the same physical page more than once
+  unsigned int vaddr1 = 4096*1024*400;
+  unsigned int vaddr2 = 4096*1024*600;
+  unsigned int vaddr3 = 4096*1024*800;
+  unsigned int page1 = alloc_page(1, vaddr1, 7);
+  unsigned int page2 = alloc_page(2, vaddr2, 7);
+  unsigned int page3 = alloc_page(2, vaddr3, 7);
+  if (page1 == page2 || page2 == page3 || page3 == page1) {
+    dprintf("test failed");
+    return 1;
+  }
+  dprintf("own test passed.\n");
   return 0;
 }
 

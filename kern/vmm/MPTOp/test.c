@@ -1,5 +1,7 @@
 #include <lib/debug.h>
+#include <lib/x86.h>
 #include "export.h"
+#include "import.h"
 
 int MPTOp_test1()
 {
@@ -51,8 +53,30 @@ int MPTOp_test1()
  */
 int MPTOp_test_own()
 {
-  // TODO (optional)
-  // dprintf("own test passed.\n");
+  //confirm random kernel mem has some permission set
+  unsigned int indentity_entry_kern = get_ptbl_entry_by_va(0, 4096);
+  if (indentity_entry_kern == 0) {
+    dprintf("own test failed");
+    return 1;
+  }
+  //confirm has PTE_G
+  if ((indentity_entry_kern  & PTE_G)== 0) {
+    dprintf("own test failed");
+    return 1;
+  }
+
+  unsigned int user_mem = get_ptbl_entry_by_va(0, 0x40004096);
+  if (user_mem == 0) {
+    dprintf("own test failed");
+    return 1;
+  }
+  //confirm has PTE_G
+  if ((user_mem  & PTE_G)!= 0) {
+    dprintf("own test failed");
+    return 1;
+  }
+
+  dprintf("own test passed.\n");
   return 0;
 }
 
