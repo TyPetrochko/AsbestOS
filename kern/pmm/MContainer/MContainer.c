@@ -20,16 +20,9 @@ static struct SContainer CONTAINER[NUM_IDS];
 void container_init(unsigned int mbi_addr)
 {
   unsigned int real_quota;
-  // TODO: define your local variables here.
-
-  pmem_init(mbi_addr);
+  
+	pmem_init(mbi_addr);
   real_quota = 0;
-
-  /**
-   * TODO: compute the available quota and store it into the variable real_quota.
-   * It should be the number of the unallocated pages with the normal permission
-   * in the physical memory allocation table.
-   */
 
 	for(unsigned int i = 0; i < get_nps(); i++){
 		if(at_is_norm(i) && !at_is_allocated(i)) real_quota++;
@@ -94,10 +87,6 @@ unsigned int container_split(unsigned int id, unsigned int quota)
   nc = CONTAINER[id].nchildren;
   child = id * MAX_CHILDREN + 1 + nc; //container index for the child process
 
-  /**
-   * TODO: update the container structure of both parent and child process appropriately.
-   */
-
 	CONTAINER[id].nchildren++;
 	CONTAINER[id].usage += quota; // increment parent's usage or decrement quota?
 	CONTAINER[child].usage = 0;
@@ -117,9 +106,6 @@ unsigned int container_split(unsigned int id, unsigned int quota)
  */
 unsigned int container_alloc(unsigned int id)
 {
-  /*
-   * TODO: implement the function here.
-   */
 	if(CONTAINER[id].quota == CONTAINER[id].usage)
 		return 0;
 

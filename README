@@ -1,5 +1,11 @@
 Tyler implemented the MContainer and MPTIntro layers. Alex implemented MPTOp, MPTNew, and MPTKern. We both worked on MPTComm.
 
+In the MContainer layer, we wrote a function to initialize containers (structs that store the memory quota, usage, parent process, number of childen processes, and whether the container is used currently). We wrote getters and setters for each of these fields included within a container, as well as a function to determine whether a container can "consume" a certain number of pages of memory. We also wrote code to split off a child from a parent process, allocate a page for a process, and free a container.
+
+In the MPTIntro layer, we implemented functions to get, set, and remove page directory entries for particular processes, as well as functions to point page directory entries to page tables sitting in the identity page table pool. We did the same for page table entries. We also wrote a function set_pdir_base which sets the CR3 register with the start address of a page directory structure for a certain process.
+
+In the MPTComm layer, we used the MPTIntro and MContainer layers to allocate individual pages (via MContainer) for use as page tables. We likewise wrote a function to free a given page table. We also wrote an initialization function that maps the kernel portion of each process's page directory is an identity map.
+
 In the MPTOp layer, we implemented functions to get, set, and remove page directory and page table entries by virtual address by first processing the addresses using bit shifts so as to determine the index of the page directory and page table. 
 
 In the MPTComm layer, we wrote the functions to initialize the page directories and to allocate and free pages for page directory entries. We used the container_alloc function from MContainer as well as the getters and setters written in previous layers.
