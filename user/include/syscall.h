@@ -51,10 +51,12 @@ sys_yield(void)
 static gcc_inline pid_t
 sys_fork(void)
 {
+	int errno;
 	pid_t pid;
 
-	asm volatile("int %1" 
-			 :"=b" (pid)
+	asm volatile("int %2" 
+			 : "=a" (errno),
+			   "=b" (pid)
 		     : "i" (T_SYSCALL),
 		       "a" (SYS_fork)
 		     : "cc", "memory");
