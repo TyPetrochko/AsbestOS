@@ -36,7 +36,7 @@ unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int p
   unsigned int result;
   pdir_entry = get_pdir_entry_by_va(proc_index, vadr);
   if (pdir_entry != 0)
-    result = pdir_entry;
+    result = pdir_entry / PAGESIZE;
   else
   {
     result = alloc_ptbl(proc_index, vadr);
@@ -61,7 +61,6 @@ unsigned int unmap_page(unsigned int proc_index, unsigned int vadr)
   // TODO
   // return 0;
   unsigned int ptbl_entry;
-  unsigned int count;
   ptbl_entry = get_ptbl_entry_by_va(proc_index, vadr);
   if (ptbl_entry != 0)
     rmv_ptbl_entry_by_va(proc_index, vadr);

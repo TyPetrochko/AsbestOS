@@ -103,7 +103,8 @@ unsigned int container_split(unsigned int id, unsigned int quota)
 
 
 /**
- * allocates one more page for process # [id], given that its usage would not exceed the quota.
+ * allocates one more page for process # [id].
+ * you should check whether its usage would exceed the quota before performing allocation.
  * the container structure should be updated accordingly after the allocation.
  * returns the page index of the allocated page, or 0 in the case of failure.
  */
