@@ -48,20 +48,22 @@ sys_yield(void)
 		     : "cc", "memory");
 }
 
-static gcc_inline pid_t
-sys_fork(void)
+static gcc_inline void
+sys_produce(void)
 {
-	int errno;
-	pid_t pid;
-
-	asm volatile("int %2" 
-			 : "=a" (errno),
-			   "=b" (pid)
+	asm volatile("int %0" :
 		     : "i" (T_SYSCALL),
-		       "a" (SYS_fork)
+		       "a" (SYS_produce)
 		     : "cc", "memory");
+}
 
-	return pid;
+static gcc_inline void
+sys_consume(void)
+{
+	asm volatile("int %0" :
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_consume)
+		     : "cc", "memory");
 }
 
 #endif
