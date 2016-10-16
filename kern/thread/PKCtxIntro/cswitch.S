@@ -15,10 +15,8 @@ cswitch:
   movl    %ebp, 16(%eax)
   pushl   (%esp)
   popl    20(%eax)
-  // movl    (%esp), 20(%eax)
 
 	/* TODO: load the new kernel context */
-
 
   // Pseudocode:
   //  0) Save ESP
@@ -32,7 +30,6 @@ cswitch:
   movl     8(%edx), %esi
   movl    12(%edx), %ebx 
   movl    16(%edx), %ebp 
-  //movl    20(%edx), (%esp)
   pushl   20(%edx)
   popl    (%esp)
 	xor     %eax, %eax
