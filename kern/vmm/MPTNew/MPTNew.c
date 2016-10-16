@@ -16,7 +16,17 @@
 unsigned int alloc_page (unsigned int proc_index, unsigned int vaddr, unsigned int perm)
 {
 	// TODO
-	return 0;
+	// return 0;
+	unsigned int pi;
+	unsigned int result;
+	pi = container_alloc (proc_index);
+
+	if (pi == 0)
+		result = MagicNumber;
+	else
+		result = map_page (proc_index, vaddr, pi, perm);
+
+	return result;
 }
 
 

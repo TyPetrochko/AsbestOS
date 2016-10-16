@@ -9,11 +9,16 @@
  */
 void pdir_init_kern(unsigned int mbi_adr)
 {
-    // TODO: define your local variables here.
-
+    unsigned int i;
     pdir_init(mbi_adr);
     
     //TODO
+    i = 256;
+    while(i < 960)
+    {
+        set_pdir_entry_identity(0, i);
+        i ++;
+    }
 }
 
 /**
@@ -26,7 +31,21 @@ void pdir_init_kern(unsigned int mbi_adr)
 unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int page_index, unsigned int perm)
 {   
   // TODO
-  return 0;
+  // return 0;
+  unsigned int pdir_entry; 
+  unsigned int result;
+  pdir_entry = get_pdir_entry_by_va(proc_index, vadr);
+  if (pdir_entry != 0)
+    result = pdir_entry / PAGESIZE;
+  else
+  {
+    result = alloc_ptbl(proc_index, vadr);
+    if (result == 0)
+      result = MagicNumber;
+  }
+  if (result != MagicNumber)
+    set_ptbl_entry_by_va(proc_index, vadr, page_index, perm);
+  return result;
 }
 
 /**
@@ -40,5 +59,11 @@ unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int p
 unsigned int unmap_page(unsigned int proc_index, unsigned int vadr)
 {
   // TODO
-  return 0;
+  // return 0;
+  unsigned int ptbl_entry;
+  ptbl_entry = get_ptbl_entry_by_va(proc_index, vadr);
+  if (ptbl_entry != 0)
+    rmv_ptbl_entry_by_va(proc_index, vadr);
+  return ptbl_entry;
 }   
+
