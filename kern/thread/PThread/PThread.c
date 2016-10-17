@@ -43,6 +43,10 @@ void thread_yield(void)
   current_id  = get_curid();
   next_id     = tqueue_dequeue(NUM_IDS);
 
+  // do nothing if no waiting threads
+  if(next_id == NUM_IDS)
+    return;
+
   // reset tcbs
   tcb_set_state(current_id, TSTATE_READY);
   tcb_set_state(next_id, TSTATE_RUN);
