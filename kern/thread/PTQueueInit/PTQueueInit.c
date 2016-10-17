@@ -28,6 +28,7 @@ void tqueue_enqueue(unsigned int chid, unsigned int pid)
   unsigned int tailPid;
 
   tailPid = tqueue_get_tail(chid);
+  
   //if there is nothing in the queue
   if (tailPid == NUM_IDS) {
   	tqueue_set_head(chid, pid);
