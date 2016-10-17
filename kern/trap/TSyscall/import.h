@@ -3,6 +3,9 @@
 
 #ifdef _KERN_
 
+unsigned int container_can_consume(unsigned int id, unsigned int n);
+unsigned int container_get_nchildren(unsigned int id);
+
 unsigned int get_curid(void);
 unsigned int syscall_get_arg1(void);
 unsigned int syscall_get_arg2(void);
@@ -18,8 +21,9 @@ void syscall_set_retval3(unsigned int retval);
 void syscall_set_retval4(unsigned int retval);
 void syscall_set_retval5(unsigned int retval);
 
-unsigned int proc_create(void *elf_addr, unsigned int);
+unsigned int proc_create(void *elf_addr, unsigned int quota);
 void thread_yield(void);
+
 
 #endif /* _KERN_ */
 

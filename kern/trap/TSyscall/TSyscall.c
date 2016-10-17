@@ -76,7 +76,61 @@ extern uint8_t _binary___obj_user_fork_fork_start[];
  */
 void sys_spawn(void)
 {
-  // TODO
+  unsigned int elf_id, quota, proc_id;
+  
+  // 0-indexed map of elf binarioes
+  void *elf_addrs[3] = 
+  {
+    _binary___obj_user_pingpong_ping_start,
+    _binary___obj_user_pingpong_pong_start,
+    _binary___obj_user_pingpong_ding_start
+  }
+  // get elf_id, quota
+  //
+  // check that elf_id is 1, 2, or 3, else return NUM_IDS and set errno E_INVAL_PID
+  //
+  // check container_can_consume get_curid(), quota
+  //    -> if not, do fail (see above)
+  // also check if current proc can make another child, i.e. container_get_nchildren(get_curid()) < MAX_CHILDREN
+  //
+  // call proc_create() on proper elf binary, with quota
+  //
+  // check that return value from proc_create() does not exceed NUM_IDS
+  //    -> if so, do fail
+  // 
+  // if hasn't failed thus far
+  //    -> set error code to no error
+  //    -> set return value 1 to the newly created proc_id
+  //
+  elf_id  = syscall_get_arg2();
+  quota   = syscall_get_arg3();
+
+  // validations (see piazza question on this)
+  if(elf_id < 1 || elf_id > 3)
+    goto sys_spawn_failed;
+
+  else if(!container_can_consume(get_curid()))
+    goto sys_spawn_failed;
+
+  else if(container_get_nchildren(get_curid()) >= MAX_CHILDREN)
+    goto sys_spawn_failed;
+
+  // Make the new process!
+  proc_id = proc_create(elf_addrs[elf_id - 1], quota);
+
+  // more validations
+  if(proc_id > NUM_IDS)
+    goto sys_spawn_failed;
+
+  // it worked!
+  syscall_set_errno(E_SUCC);
+  syscall_set_retval1(proc_id);
+  return;
+
+  // we failed somewhere, notify caller!
+sys_spawn_failed:
+  syscall_set_errno(E_INVAL_PID);
+  syscall_set_retval1(NUM_IDS);
 }
 
 /**
@@ -87,7 +141,8 @@ void sys_spawn(void)
  */
 void sys_yield(void)
 {
-  // TODO
+  thread_yield();
+  syscall_set_errno(E_SUCC);
 }
 
 // Your implementation of fork
