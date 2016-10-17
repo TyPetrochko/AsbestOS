@@ -76,15 +76,6 @@ extern uint8_t _binary___obj_user_fork_fork_start[];
  */
 void sys_spawn(void)
 {
-  unsigned int elf_id, quota, proc_id;
-  
-  // 0-indexed map of elf binarioes
-  void *elf_addrs[3] = 
-  {
-    _binary___obj_user_pingpong_ping_start,
-    _binary___obj_user_pingpong_pong_start,
-    _binary___obj_user_pingpong_ding_start
-  }
   // get elf_id, quota
   //
   // check that elf_id is 1, 2, or 3, else return NUM_IDS and set errno E_INVAL_PID
@@ -102,6 +93,16 @@ void sys_spawn(void)
   //    -> set error code to no error
   //    -> set return value 1 to the newly created proc_id
   //
+  unsigned int elf_id, quota, proc_id;
+  
+  // 0-indexed map of elf binarioes
+  void *elf_addrs[3] = 
+  {
+    _binary___obj_user_pingpong_ping_start,
+    _binary___obj_user_pingpong_pong_start,
+    _binary___obj_user_pingpong_ding_start
+  };
+  
   elf_id  = syscall_get_arg2();
   quota   = syscall_get_arg3();
 
@@ -109,7 +110,7 @@ void sys_spawn(void)
   if(elf_id < 1 || elf_id > 3)
     goto sys_spawn_failed;
 
-  else if(!container_can_consume(get_curid()))
+  else if(!container_can_consume(get_curid(), quota))
     goto sys_spawn_failed;
 
   else if(container_get_nchildren(get_curid()) >= MAX_CHILDREN)

@@ -56,7 +56,7 @@ void syscall_set_errno(unsigned int errno)
 
 void syscall_set_retval1(unsigned int retval)
 {
-  uctx_pool[get_curid()].regs.ebx = errno;
+  uctx_pool[get_curid()].regs.ebx = retval;
 }
 
 void syscall_set_retval2(unsigned int retval)
