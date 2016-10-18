@@ -17,7 +17,7 @@ unsigned int kctx_new(void *entry, unsigned int id, unsigned int quota)
 {
   unsigned int newChild = alloc_mem_quota(id, quota);
   unsigned int topOfStack = PAGESIZE - 1;
-  kctx_set_esp(newChild, (void *) STACK_LOC[newChild][topOfStack]);
+  kctx_set_esp(newChild, (void*) &STACK_LOC[newChild][topOfStack]);
   kctx_set_eip(newChild, entry);
 
   return newChild;
