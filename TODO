@@ -1,1 +1,12 @@
 1) Should exception/interrupt handlers return a value? Right now they are not executing logic.
+
+Fork pseudocode:
+
+TSyscall.sys_fork()
+  - do get_curid()
+  - figure out current id's quota, and figure out half quota
+  - do thread_spawn(current id's eip reg, current id, half_quota)
+    -> will spawn a new stack, make a new tcb, enqueue it, yadda yadda yadda
+  
+  - set all pages
+
