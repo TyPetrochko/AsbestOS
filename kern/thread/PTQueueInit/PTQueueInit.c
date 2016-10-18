@@ -84,11 +84,24 @@ void tqueue_remove(unsigned int chid, unsigned int pid)
   unsigned int tail;
   unsigned int prev;
   unsigned int next;
+  unsigned int current;
 
   head = tqueue_get_head(chid);
   tail = tqueue_get_tail(chid);
   next = tcb_get_next(pid);
   prev = tcb_get_prev(pid);
+
+  //confirm pid is in chid
+  current = head;
+  while (current != NUM_IDS) {
+    if (current == pid) {
+      break;
+    }
+    current = tcb_get_next(current);
+  }
+  if (current == NUM_IDS) {
+    return;
+  }
 
   //remove self from list
   tcb_set_next(pid, NUM_IDS);
