@@ -1,0 +1,1 @@
+1) Should exception/interrupt handlers return a value? Right now they are not executing logic.

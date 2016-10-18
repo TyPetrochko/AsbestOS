@@ -13,8 +13,8 @@ cswitch:
   movl    %esi,  8(%eax)
   movl    %ebx, 12(%eax)
   movl    %ebp, 16(%eax)
-  pushl   (%esp)
-  popl    20(%eax)
+  movl    (%esp), %ecx
+  movl    %ecx, 20(%eax)
 
 	/* TODO: load the new kernel context */
 
@@ -30,7 +30,8 @@ cswitch:
   movl     8(%edx), %esi
   movl    12(%edx), %ebx 
   movl    16(%edx), %ebp 
-  pushl   20(%edx)
-  popl    (%esp)
-	xor     %eax, %eax
+  movl    20(%edx), %ecx
+  movl    %ecx, (%esp)
+
+  xor     %eax, %eax
 	ret

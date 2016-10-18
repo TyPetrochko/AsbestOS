@@ -90,7 +90,16 @@ void pgflt_handler(void)
  */
 void exception_handler(void)
 {
-  // TODO
+  unsigned int trapno;
+
+  trapno = uctx_pool[get_curid()].trapno;
+  switch(trapno){
+    case T_PGFLT:
+      pgflt_handler();
+      break;
+    default:
+      default_exception_handler();
+  }
 }
 
 
@@ -116,9 +125,21 @@ static int default_intr_handler (void)
  * Any interrupt request except the spurious or timer should be
  * routed to the default interrupt handler.
  */
-void interrupt_handler (void)
-{
-    // TODO
+void interrupt_handler (void){
+  unsigned int trapno;
+
+  trapno = uctx_pool[get_curid()].trapno;
+  
+  switch(trapno){
+    case IRQ_SPURIOUS:
+      spurious_intr_handler();
+      break;
+    case T_LTIMER:
+      timer_intr_handler();
+      break;
+    default:
+      default_intr_handler();
+  }
 }
 
 void trap (tf_t *tf)
