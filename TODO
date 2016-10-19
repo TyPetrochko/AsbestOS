@@ -8,5 +8,29 @@ TSyscall.sys_fork()
   - do thread_spawn(current id's eip reg, current id, half_quota)
     -> will spawn a new stack, make a new tcb, enqueue it, yadda yadda yadda
   
-  - set all pages
+  - using the MPTFork layer, copy all the page mappings to the new proc, but
+    do NOT actually copy the pages. Set each page to read only, and set
+    PTE_COW bit for each page's permissions
 
+  - we must use syscall_set_retval1 to set the return value of the SPAWNING
+    process to the child's id
+
+  - we also need a syscall_set_retval1_proc function to set the return value
+    in the child process equal to zero!
+
+
+
+
+TSyscallArg.syscall_set_child_retval1(unsigned int pid, unsigned int val)
+  - same as syscall_set_retval1 but takes a pid command
+
+
+
+MPTFork.copy_all(unsigned int parent, child)
+  - 
+
+MPTFork.hard_copy(unsigned int parent, child, pte_entry, fault_va)
+  - this function is called when a page fault occurs, and occurs because both
+    processes have fault_va mapped to the SAME physical address
+  
+  - therefore, we need to map fault_va to a new process!
