@@ -142,8 +142,8 @@ sys_spawn_failed:
  */
 void sys_yield(void)
 {
-  thread_yield();
   syscall_set_errno(E_SUCC);
+  thread_yield();
 }
 
 // Your implementation of fork
