@@ -96,18 +96,19 @@ void sys_spawn(void)
   unsigned int elf_id, quota, proc_id;
   
   // 0-indexed map of elf binarioes
-  void *elf_addrs[3] = 
+  void *elf_addrs[4] = 
   {
     _binary___obj_user_pingpong_ping_start,
     _binary___obj_user_pingpong_pong_start,
-    _binary___obj_user_pingpong_ding_start
+    _binary___obj_user_pingpong_ding_start,
+    _binary___obj_user_fork_fork_start
   };
   
   elf_id  = syscall_get_arg2();
   quota   = syscall_get_arg3();
 
   // validations (see piazza question on this)
-  if(elf_id < 1 || elf_id > 3)
+  if(elf_id < 1 || elf_id > 4)
     goto sys_spawn_failed;
 
   else if(!container_can_consume(get_curid(), quota))
@@ -154,8 +155,8 @@ void sys_fork()
   // TODO errorcheck!!!
  
   // set the new process's
-  syscall_set_pid_errno(pid, E_SUCC);
-  syscall_set_pid_ret_val(pid, 0);
+  syscall_set_pid_errno(child_pid, E_SUCC);
+  syscall_set_pid_retval(child_pid, 0);
 
   syscall_set_errno(E_SUCC);
   syscall_set_retval1(child_pid);
