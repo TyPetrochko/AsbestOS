@@ -16,11 +16,8 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 	unsigned int newIndex;
 	unsigned int i;
 	unsigned int j;
-	//copy over pde
+  //copy over pde
 	for (i = 0; i < NUM_DIR; i++) {
-    if(get_pdir_entry(parentProcess, i) == 0){
-      KERN_DEBUG("OH GOD NO!\n");
-    }
 		newIndex = container_alloc(childProcess);
 		set_pdir_entry(childProcess, i, newIndex);
 		//set permissions of ptbls
@@ -42,20 +39,19 @@ void hardCopy(unsigned int pid, unsigned int vaddr) {
 
 	char * readPointer;
 	char * writePointer;
+  
+  //get the old ptblentry 
+  entry = get_ptbl_entry_by_va(pid, vaddr);
+  oldPageIndex = entry / PAGESIZE;
 
-    //get the old ptblentry 
-    entry = get_ptbl_entry_by_va(pid, vaddr);
-    oldPageIndex = entry / PAGESIZE;
+  //assign new page for pte;
+  newPageIndex = container_alloc(pid);
+  set_ptbl_entry_by_va(pid, vaddr, newPageIndex, PT_PERM_PTU);
 
-    //assign new page for pte;
-    newPageIndex = container_alloc(pid);
-    set_ptbl_entry_by_va(pid, vaddr, newPageIndex, PT_PERM_PTU);
-
-    //copy over the actual info
-    readPointer = (char *) (oldPageIndex * PAGESIZE);
-    writePointer = (char *) (newPageIndex * PAGESIZE);
-    for (i = 0; i < 4096; i++) {
-    	writePointer[i] = readPointer[i];
-    }
-
+  //copy over the actual info
+  readPointer = (char *) (oldPageIndex * PAGESIZE);
+  writePointer = (char *) (newPageIndex * PAGESIZE);
+  for (i = 0; i < 4096; i++) {
+    writePointer[i] = readPointer[i];
+  }
 }

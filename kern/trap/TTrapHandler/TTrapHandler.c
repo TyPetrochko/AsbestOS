@@ -65,6 +65,7 @@ void pgflt_handler(void)
 		if (pte_entry & PTE_COW){
 			// handling copy-on-write
       hardCopy(cur_pid, fault_va);
+      return;
 		}else{
 			KERN_PANIC("Writing to read-only page: va = %p\n", fault_va);
 		}
@@ -150,7 +151,7 @@ void trap (tf_t *tf)
     uctx_pool[cur_pid] = *tf; //save the current user context (trap frame).
     set_pdir_base (0); //switch to the kernel's page table.
 
-    KERN_DEBUG("Trap! Current pid = %d, trapno = %d\n", cur_pid, tf->trapno);
+    //KERN_DEBUG("Trap! Current pid = %d, trapno = %d\n", cur_pid, tf->trapno);
     if (T_DIVIDE <= tf->trapno && tf->trapno <= T_SECEV)
         exception_handler ();
     else if (T_IRQ0 + IRQ_TIMER <= tf->trapno && tf->trapno <= T_IRQ0 + IRQ_IDE2)

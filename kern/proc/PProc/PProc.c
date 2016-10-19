@@ -41,28 +41,56 @@ unsigned int proc_create(void *elf_addr, unsigned int quota)
 	return pid;
 }
 
+extern uint8_t _binary___obj_user_fork_fork_start[];
+
 unsigned int proc_fork()
 {
-	unsigned int parent_id, child_id, quota;
+	unsigned int pid, id;
+	
+  unsigned int quota, parent_id;
+  void *elf_addr;
+
+  elf_addr = (void *) _binary___obj_user_fork_fork_start;
 
   // get quota of new process
   parent_id = get_curid();
   quota = container_get_quota(parent_id) / 2;
 
-  // spawn the new process
-	child_id  = thread_spawn(kctx_pool[parent_id].eip, parent_id, quota);
 
-  // set user context values
-  uctx_pool[child_id].es     = uctx_pool[parent_id].es;
-  uctx_pool[child_id].ds     = uctx_pool[parent_id].ds;
-  uctx_pool[child_id].cs     = uctx_pool[parent_id].cs;
-  uctx_pool[child_id].ss     = uctx_pool[parent_id].ss;
-  uctx_pool[child_id].esp    = uctx_pool[parent_id].esp;
-  uctx_pool[child_id].eflags = uctx_pool[parent_id].eflags;
-  uctx_pool[child_id].eip    = uctx_pool[parent_id].eip;
+  id = get_curid();
+	pid = thread_spawn((void *) proc_start_user, id, quota);
 
-  // duplicate memory!
-  copyPages(parent_id, child_id);
-	return child_id;
+	elf_load(elf_addr, pid);
+
+  uctx_pool[pid].es = CPU_GDT_UDATA | 3;
+  uctx_pool[pid].ds = CPU_GDT_UDATA | 3;
+  uctx_pool[pid].cs = CPU_GDT_UCODE | 3;
+  uctx_pool[pid].ss = CPU_GDT_UDATA | 3;
+  uctx_pool[pid].esp = VM_USERHI;
+  uctx_pool[pid].eflags = FL_IF;
+  uctx_pool[pid].eip = uctx_pool[id].eip;
+
+	return pid;
+	// unsigned int parent_id, child_id, quota;
+
+  // // get quota of new process
+  // parent_id = get_curid();
+  // quota = container_get_quota(parent_id) / 2;
+
+  // // spawn the new process
+	// child_id  = thread_spawn((void *) proc_start_user, parent_id, quota);
+
+  // // set user context values
+  // uctx_pool[child_id].es     = uctx_pool[parent_id].es;
+  // uctx_pool[child_id].ds     = uctx_pool[parent_id].ds;
+  // uctx_pool[child_id].cs     = uctx_pool[parent_id].cs;
+  // uctx_pool[child_id].ss     = uctx_pool[parent_id].ss;
+  // uctx_pool[child_id].esp    = uctx_pool[parent_id].esp;
+  // uctx_pool[child_id].eflags = uctx_pool[parent_id].eflags;
+  // uctx_pool[child_id].eip    = uctx_pool[parent_id].eip;
+
+  // // duplicate memory!
+  // // copyPages(parent_id, child_id);
+	// return child_id;
 }
 
