@@ -58,6 +58,7 @@ void hardCopy(unsigned int pid, unsigned int vaddr) {
   newPageIndex = container_alloc(pid);
   if(newPageIndex == 0)
     KERN_PANIC("Couldn't allocate a page!\n");
+  
   set_ptbl_entry_by_va(pid, vaddr, newPageIndex, PT_PERM_PTU);
 
   //copy over the actual info

@@ -47,7 +47,7 @@ unsigned int proc_fork()
 
   // get quota of new process
   parent_id = get_curid();
-  quota = container_get_quota(parent_id) / 2;
+  quota = (container_get_quota(parent_id) - container_get_usage(parent_id)) / 2;
   
   // spawn the new process
 	child_id  = thread_spawn((void *) proc_start_user, parent_id, quota);

@@ -13,6 +13,7 @@ struct kctx {
 };
 
 unsigned int container_get_quota(unsigned int id);
+unsigned int container_get_usage(unsigned int id);
 
 void copyPages(unsigned int parentProcess, unsigned int childProcess);
 void hardCopy(unsigned int pid, unsigned int vaddr);

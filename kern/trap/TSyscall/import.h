@@ -6,6 +6,7 @@
 extern tf_t uctx_pool[NUM_IDS];
 
 unsigned int container_get_quota(unsigned int id);
+unsigned int container_get_usage(unsigned int id);
 unsigned int container_can_consume(unsigned int id, unsigned int n);
 unsigned int container_get_nchildren(unsigned int id);
 
