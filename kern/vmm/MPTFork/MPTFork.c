@@ -30,28 +30,26 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 
 }
 
-void hardCopy(unsigned int parent, unsigned int child, unsigned int vaddr) {
-	unsigned int parentPTE;
-	unsigned int childPTE;
-	unsigned int newPage;
-	unsigned int pageIndex;
+void hardCopy(unsigned int pid, unsigned int vaddr) {
+	unsigned int entry;
+	unsigned int newPageIndex;
+	unsigned int oldPageIndex;
 	unsigned int i;
 
 	char * readPointer;
 	char * writePointer;
 
-    //get the ptblentry for the parent
-    parentPTE = get_ptbl_entry_by_va(parent, vaddr);
-    pageIndex = parentPTE / PAGESIZE;
-    set_ptbl_entry_by_va(parent, vaddr, pageIndex, PT_PERM_PTU);
+    //get the old ptblentry 
+    entry = get_ptbl_entry_by_va(pid, vaddr);
+    oldPageIndex = entry / PAGESIZE;
 
-    //assign new page for pte for child;
-    newPage = container_alloc(child);
-    set_ptbl_entry_by_va(child, vaddr, newPage, PT_PERM_PTU);
+    //assign new page for pte;
+    newPageIndex = container_alloc(pid);
+    set_ptbl_entry_by_va(pid, vaddr, newPageIndex, PT_PERM_PTU);
 
     //copy over the actual info
-    readPointer = (char *) (pageIndex * PAGESIZE);
-    writePointer = (char *) (newPage * PAGESIZE);
+    readPointer = (char *) (oldPageIndex * PAGESIZE);
+    writePointer = (char *) (newPageIndex * PAGESIZE);
     for (i = 0; i < 4096; i++) {
     	writePointer[i] = readPointer[i];
     }
