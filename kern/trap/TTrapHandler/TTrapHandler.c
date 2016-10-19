@@ -150,6 +150,7 @@ void trap (tf_t *tf)
     uctx_pool[cur_pid] = *tf; //save the current user context (trap frame).
     set_pdir_base (0); //switch to the kernel's page table.
 
+    KERN_DEBUG("Trap! Current pid = %d, trapno = %d\n", cur_pid, tf->trapno);
     if (T_DIVIDE <= tf->trapno && tf->trapno <= T_SECEV)
         exception_handler ();
     else if (T_IRQ0 + IRQ_TIMER <= tf->trapno && tf->trapno <= T_IRQ0 + IRQ_IDE2)

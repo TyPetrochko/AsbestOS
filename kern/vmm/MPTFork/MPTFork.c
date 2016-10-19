@@ -1,4 +1,5 @@
 #include <lib/x86.h>
+#include <lib/debug.h>
 
 #include "import.h"
 
@@ -9,7 +10,6 @@
 
 
 void copyPages(unsigned int parentProcess, unsigned int childProcess) {
-	return;
   unsigned int parentPDE;
 	unsigned int pageTableEntry;
 	unsigned int pageIndex;
@@ -18,6 +18,9 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 	unsigned int j;
 	//copy over pde
 	for (i = 0; i < NUM_DIR; i++) {
+    if(get_pdir_entry(parentProcess, i) == 0){
+      KERN_DEBUG("OH GOD NO!\n");
+    }
 		newIndex = container_alloc(childProcess);
 		set_pdir_entry(childProcess, i, newIndex);
 		//set permissions of ptbls
