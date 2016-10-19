@@ -22,7 +22,7 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 		//set permissions of ptbls
 		for (j = 0; j < NUM_TBL; j++) {
 			pageTableEntry = get_ptbl_entry(parentProcess, i, j);
-			pageIndex = pageTableEntry / PAGE_SIZE;
+			pageIndex = pageTableEntry / PAGESIZE;
 			set_ptbl_entry(parentProcess, i, j, pageIndex, NEW_PERM);
 			set_ptbl_entry(childProcess, i, j, pageIndex, NEW_PERM);
 		}
@@ -42,7 +42,7 @@ void hardCopy(unsigned int parent, unsigned int child, unsigned int vaddr) {
 
     //get the ptblentry for the parent
     parentPTE = get_ptbl_entry_by_va(parent, vaddr);
-    pageIndex = parentPTE / PAGE_SIZE;
+    pageIndex = parentPTE / PAGESIZE;
     set_ptbl_entry_by_va(parent, vaddr, pageIndex, PT_PERM_PTU);
 
     //assign new page for pte for child;
@@ -50,8 +50,8 @@ void hardCopy(unsigned int parent, unsigned int child, unsigned int vaddr) {
     set_ptbl_entry_by_va(child, vaddr, newPage, PT_PERM_PTU);
 
     //copy over the actual info
-    readPointer = (char *) pageIndex * PAGE_SIZE;
-    writePointer = (char *) newPage * PAGE_SIZE;
+    readPointer = (char *) (pageIndex * PAGESIZE);
+    writePointer = (char *) (newPage * PAGESIZE);
     for (i = 0; i < 4096; i++) {
     	writePointer[i] = readPointer[i];
     }
