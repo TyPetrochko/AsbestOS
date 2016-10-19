@@ -137,10 +137,12 @@ unsigned int container_alloc(unsigned int id)
   unsigned int u, q, i;
   u = CONTAINER[id].usage;
   q = CONTAINER[id].quota;
+  if (u == q) KERN_PANIC("Process %d reached quota %d\n", id, q);
   if (u == q) return 0;
 
   CONTAINER[id].usage = u + 1;
   i = palloc();
+  KERN_DEBUG("Process %d at usage/quota %d / %d\n", id, u, q);
   return i;
 }
 

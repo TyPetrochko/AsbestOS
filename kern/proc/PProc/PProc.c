@@ -41,8 +41,6 @@ unsigned int proc_create(void *elf_addr, unsigned int quota)
 	return pid;
 }
 
-extern uint8_t _binary___obj_user_fork_fork_start[];
-
 unsigned int proc_fork()
 {
 	unsigned int parent_id, child_id, quota;

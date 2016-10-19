@@ -19,16 +19,14 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 	unsigned int i;
 	unsigned int j;
 
-  unsigned int new_ptbl;
   //copy over pde
 	for (i = USER_DIR_LO; i < USER_DIR_HI; i++) {
-		// newIndex = container_alloc(childProcess);
-    new_ptbl = alloc_ptbl(childProcess, i * 4096 * 1024);
+		newIndex = container_alloc(childProcess);
     
-    if(new_ptbl == 0)
-      KERN_PANIC("Could not allocate page table!\n");
+    if(newIndex == 0)
+      KERN_PANIC("Couldn't allocate a page!\n");
 
-		// set_pdir_entry(childProcess, i, newIndex);
+		set_pdir_entry(childProcess, i, newIndex);
 		//set permissions of ptbls
 		for (j = 0; j < NUM_TBL; j++) {
 			pageTableEntry = get_ptbl_entry(parentProcess, i, j);
@@ -40,7 +38,6 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 }
 
 void hardCopy(unsigned int pid, unsigned int vaddr) {
-  KERN_DEBUG("Hardcopying va = 0x%08x, pid = %d\n", vaddr, pid);
 	unsigned int entry;
 	unsigned int newPageIndex;
 	unsigned int oldPageIndex;
@@ -55,6 +52,8 @@ void hardCopy(unsigned int pid, unsigned int vaddr) {
 
   //assign new page for pte;
   newPageIndex = container_alloc(pid);
+  if(newPageIndex == 0)
+    KERN_PANIC("Couldn't allocate a page!\n");
   set_ptbl_entry_by_va(pid, vaddr, newPageIndex, PT_PERM_PTU);
 
   //copy over the actual info
@@ -63,4 +62,6 @@ void hardCopy(unsigned int pid, unsigned int vaddr) {
   for (i = 0; i < 4096; i++) {
     writePointer[i] = readPointer[i];
   }
+  
+  KERN_DEBUG("Hardcopying va = 0x%08x, pid = %d, old = 0x%08x, new = 0x%08x\n", vaddr, pid, oldPageIndex, newPageIndex);
 }
