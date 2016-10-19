@@ -1,5 +1,6 @@
 #include <lib/x86.h>
 #include <lib/thread.h>
+#include <lib/debug.h>
 
 #include "import.h"
 
@@ -23,6 +24,8 @@ unsigned int thread_spawn(void *entry, unsigned int id, unsigned int quota)
   tcb_set_state(new_thread, TSTATE_READY);
 
   tqueue_enqueue(NUM_IDS, new_thread);
+
+  KERN_DEBUG("Spawning new thread, process id %d\n", new_thread);
   return new_thread;
 }
 
@@ -54,6 +57,7 @@ void thread_yield(void)
   // set the next thread running
   tqueue_enqueue(NUM_IDS, current_id);
   set_curid(next_id);
-  
+
+  KERN_DEBUG("Switching from process %d to %d\n", current_id, next_id);
   kctx_switch(current_id, next_id);
 }

@@ -9,7 +9,8 @@
 
 
 void copyPages(unsigned int parentProcess, unsigned int childProcess) {
-	unsigned int parentPDE;
+	return;
+  unsigned int parentPDE;
 	unsigned int pageTableEntry;
 	unsigned int pageIndex;
 	unsigned int newIndex;

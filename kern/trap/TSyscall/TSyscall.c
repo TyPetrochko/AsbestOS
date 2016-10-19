@@ -161,5 +161,5 @@ void sys_fork()
   syscall_set_errno(E_SUCC);
   syscall_set_retval1(child_pid);
 
-  thread_yield();
+  KERN_DEBUG("Forked to create process %d\n", child_pid);
 }

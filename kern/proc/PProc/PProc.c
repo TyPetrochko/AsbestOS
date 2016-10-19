@@ -63,7 +63,6 @@ unsigned int proc_fork()
 
   // duplicate memory!
   copyPages(parent_id, child_id);
-
 	return child_id;
 }
 
