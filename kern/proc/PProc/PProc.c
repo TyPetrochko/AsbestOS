@@ -8,6 +8,8 @@
 #include "import.h"
 
 extern tf_t uctx_pool[NUM_IDS];
+extern struct kctx kctx_pool[NUM_IDS];
+
 extern char STACK_LOC[NUM_IDS][PAGESIZE];
 
 void proc_start_user(void)
@@ -38,3 +40,30 @@ unsigned int proc_create(void *elf_addr, unsigned int quota)
 
 	return pid;
 }
+
+unsigned int proc_fork()
+{
+	unsigned int parent_id, child_id, quota;
+
+  // get quota of new process
+  parent_id = get_curid();
+  quota = container_get_quota(parent_id) / 2;
+
+  // spawn the new process
+	child_id  = thread_spawn(kctx_pool[parent_id], parent_id, quota);
+
+  // set user context values
+  uctx_pool[pid].es     = uctx_pool[pid].es;
+  uctx_pool[pid].ds     = uctx_pool[pid].ds;
+  uctx_pool[pid].cs     = uctx_pool[pid].cs;
+  uctx_pool[pid].ss     = uctx_pool[pid].ss;
+  uctx_pool[pid].esp    = uctx_pool[pid].esp;
+  uctx_pool[pid].eflags = uctx_pool[pid].eflags;
+  uctx_pool[pid].eip    = uctx_pool[pid].eip;
+
+  // duplicate memory!
+  copyPages(parent_id, child_id);
+
+	return pid;
+}
+

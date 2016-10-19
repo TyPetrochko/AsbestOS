@@ -49,10 +49,22 @@ void syscall_set_errno(unsigned int errno)
   uctx_pool[get_curid()].regs.eax = errno;
 }
 
+// This is used for fork to set the child's errno to success
+void syscall_set_pid_errno(unsigned int pid, unsigned int errno)
+{
+  uctx_pool[pid].regs.eax = errno;
+}
+
 /**
  * Sets the return values in uctx_pool which gets passed
  * to the current running process when we return to it.
  */
+
+// This is used for fork to set child pid's return val to 0
+void syscall_set_pid_retval(unsigned int retval)
+{
+  uctx_pool[get_curid()].regs.ebx = retval;
+}
 
 void syscall_set_retval1(unsigned int retval)
 {

@@ -149,5 +149,14 @@ void sys_yield(void)
 // Your implementation of fork
 void sys_fork()
 {
-	// TODO
+  unsigned int child_pid = proc_fork();
+
+  // TODO errorcheck!!!
+ 
+  // set the new process's
+  syscall_set_pid_errno(pid, E_SUCC);
+  syscall_set_pid_ret_val(pid, 0);
+
+  syscall_set_errno(E_SUCC);
+  syscall_set_retval1(child_pid);
 }
