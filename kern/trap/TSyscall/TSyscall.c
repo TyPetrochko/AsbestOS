@@ -152,13 +152,10 @@ void sys_fork()
 {
   unsigned int child_pid = proc_fork();
 
-  // TODO errorcheck!!!
- 
   // set the new process's return val
   syscall_set_pid_errno(child_pid, E_SUCC);
   syscall_set_pid_retval(child_pid, 0);
 
   syscall_set_errno(E_SUCC);
   syscall_set_retval1(child_pid);
-
 }

@@ -1,5 +1,26 @@
-List here the following info:
-1. who you have worked with; 
-2. whether you coded this assignment together, and if not, who worked on which part;
-3. brief description of what you have implemented;
-4. and anything else you would like us to know.
+Tyler Petrochko and Alexander Ringlein
+
+Alex did exercises 2, 3, and 4. Tyler did exercises 5, 7, 8, and 9. We both worked on exercises 1, 6, and 10.
+
+What we have implemented:
+In PKCtxIntro, we implemented the cswitch function which switched contexts between two processes. The function must save and load the register values for each process to and from their corresponding structs.
+
+In PKCtxNew, we implemented the function to allocate memory for a new process and set both the eip and esp.
+
+In PTCBInit, we initialized the tcb for each process id.
+
+In PTQueueInit, we wrote the functions to add new tcbs to process queues and pop them off the next tcb at the head of the queue, as well as a function to remove tcbs from queues even if they are not at the front of the queue.
+
+In PThread, we wrote the functions to add new processes and their contexts to the ready queue, and to switch contexts to whatever thread is currently at the head of the ready queue (yield to this thread.)
+
+In TSysCallArg we wrote getters for the arguments to a system call and setters for the return values for a system call, by loading and storing these values in the structs associated with user contexts for each process.
+
+In TSysCall we wrote sys_spawn and sys_yield, which must call thread_spawn and tread_yield while also setting the return values, reading the arguments, and setting other relevant values like errno.
+
+In TTrapHandler, we wrote the interrupt and exception handlers, which check the interrupt/exception type and call the function to handle that type of interrupt or exception.
+
+For fork, we first added a new MPTFork layer in which we wrote copyPages and hardCopy. copyPages allocates new page directory entries for a child process if necessary and copies over mapping from the parent's page table entries to the child's. hardCopy is called when a page fault occurs and the PTE_COW bit is set; it allocates a new page to map to from the page table entry and then copies over the memory from the old location to the new.
+
+The sys_fork function called from TSyscall first calls a second function, proc_fork. proc_fork spawns a new thread, copies the user context from the parent process to the child process, sets the system call return value (eax) of the child process to 0, and sets the return value of the parent process to the child's process id. It then calls the copyPages function mentioned above.
+
+When a page fault occurs and the COW bit is set on the offending page table entry, the hardCopy function mentioned above is called, which duplicates the page, points the offending page table entry to the new page, disables the COW bit, and allows writing to the new page.
