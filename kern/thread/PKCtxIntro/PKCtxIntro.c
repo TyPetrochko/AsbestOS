@@ -36,6 +36,5 @@ extern void cswitch(struct kctx *from_kctx, struct kctx *to_kctx);
  */
 void kctx_switch(unsigned int from_pid, unsigned int to_pid)
 {
-  KERN_DEBUG("Swtiching from %d to %d\n", from_pid, to_pid);
 	cswitch(&kctx_pool[from_pid], &kctx_pool[to_pid]);
 }

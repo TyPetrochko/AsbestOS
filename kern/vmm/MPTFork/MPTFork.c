@@ -5,7 +5,6 @@
 
 #define NEW_PERM (PTE_P | PTE_U | PTE_COW)
 #define PT_PERM_PTU (PTE_P | PTE_W | PTE_U)
-#define NUM_DIR 1024
 #define NUM_TBL 1024
 
 #define USER_DIR_LO 256
@@ -21,8 +20,13 @@ void copyPages(unsigned int parentProcess, unsigned int childProcess) {
 
   //copy over pde
 	for (i = USER_DIR_LO; i < USER_DIR_HI; i++) {
+    // skip unmapped pdes
+    if(get_pdir_entry(parentProcess, i) == 0)
+      continue;
+
+    // make a new page table
 		newIndex = container_alloc(childProcess);
-    
+
     if(newIndex == 0)
       KERN_PANIC("Couldn't allocate a page!\n");
 
@@ -62,6 +66,4 @@ void hardCopy(unsigned int pid, unsigned int vaddr) {
   for (i = 0; i < 4096; i++) {
     writePointer[i] = readPointer[i];
   }
-  
-  KERN_DEBUG("Hardcopying va = 0x%08x, pid = %d, old = 0x%08x, new = 0x%08x\n", vaddr, pid, oldPageIndex, newPageIndex);
 }

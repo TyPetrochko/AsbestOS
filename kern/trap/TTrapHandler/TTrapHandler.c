@@ -72,8 +72,7 @@ void pgflt_handler(void)
 	}
 
   //Uncomment this line if you need to see the information of the sequence of page faults occured.
-	KERN_DEBUG("Page fault: VA 0x%08x, errno 0x%08x, process %d, EIP 0x%08x.\n", fault_va, errno, cur_pid, uctx_pool[cur_pid].eip);
-  KERN_DEBUG("Physical page = 0x%08x\n", get_ptbl_entry_by_va(cur_pid, fault_va));
+	// KERN_DEBUG("Page fault: VA 0x%08x, errno 0x%08x, process %d, EIP 0x%08x.\n", fault_va, errno, cur_pid, uctx_pool[cur_pid].eip);
 
 	if (errno & PFE_PR) {
 		KERN_PANIC("Permission denied: va = 0x%08x, errno = 0x%08x.\n", fault_va, errno);
