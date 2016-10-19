@@ -160,4 +160,6 @@ void sys_fork()
 
   syscall_set_errno(E_SUCC);
   syscall_set_retval1(child_pid);
+
+  thread_yield();
 }

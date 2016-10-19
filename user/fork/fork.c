@@ -11,6 +11,7 @@ int main (int argc, char **argv)
 
     pid = sys_fork();
 
+    printf("POST fork, pid= %d\n", pid);
     if (pid == 0){
         pid = sys_fork();
 
