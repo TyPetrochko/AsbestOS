@@ -26,7 +26,7 @@ void syscall_set_retval5(unsigned int retval);
 
 // Special funcs for fork()
 void syscall_set_pid_errno(unsigned int pid, unsigned int errno);
-void syscall_set_pid_retval(unsigned int, pid, unsigned int retval);
+void syscall_set_pid_retval(unsigned int pid, unsigned int retval);
 
 unsigned int proc_create(void *elf_addr, unsigned int quota);
 unsigned int proc_fork(void);

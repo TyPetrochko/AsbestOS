@@ -50,20 +50,20 @@ unsigned int proc_fork()
   quota = container_get_quota(parent_id) / 2;
 
   // spawn the new process
-	child_id  = thread_spawn(kctx_pool[parent_id], parent_id, quota);
+	child_id  = thread_spawn(kctx_pool[parent_id].eip, parent_id, quota);
 
   // set user context values
-  uctx_pool[pid].es     = uctx_pool[pid].es;
-  uctx_pool[pid].ds     = uctx_pool[pid].ds;
-  uctx_pool[pid].cs     = uctx_pool[pid].cs;
-  uctx_pool[pid].ss     = uctx_pool[pid].ss;
-  uctx_pool[pid].esp    = uctx_pool[pid].esp;
-  uctx_pool[pid].eflags = uctx_pool[pid].eflags;
-  uctx_pool[pid].eip    = uctx_pool[pid].eip;
+  uctx_pool[child_id].es     = uctx_pool[parent_id].es;
+  uctx_pool[child_id].ds     = uctx_pool[parent_id].ds;
+  uctx_pool[child_id].cs     = uctx_pool[parent_id].cs;
+  uctx_pool[child_id].ss     = uctx_pool[parent_id].ss;
+  uctx_pool[child_id].esp    = uctx_pool[parent_id].esp;
+  uctx_pool[child_id].eflags = uctx_pool[parent_id].eflags;
+  uctx_pool[child_id].eip    = uctx_pool[parent_id].eip;
 
   // duplicate memory!
   copyPages(parent_id, child_id);
 
-	return pid;
+	return child_id;
 }
 
