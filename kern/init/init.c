@@ -110,7 +110,7 @@ kern_main_ap(void)
     }
     else
         return;
-    tqueue_remove (NUM_IDS, pid);
+    tqueue_remove (NUM_IDS + cpu_idx, pid);
     tcb_set_state (pid, TSTATE_RUN);
     set_curid (pid);
     kctx_switch (0, pid);

@@ -1,5 +1,6 @@
 #include <lib/debug.h>
 #include <lib/x86.h>
+#include <lib/spinlock.h>
 #include "import.h"
 
 struct SContainer {
@@ -12,6 +13,16 @@ struct SContainer {
 
 // mCertiKOS supports up to NUM_IDS processes
 static struct SContainer CONTAINER[NUM_IDS]; 
+static spinlock_t container_lock[NUM_IDS];
+
+void cl_init()
+{
+  int i;
+  for(i = 0; i < NUM_IDS; i++)
+  {
+    spinlock_init(&container_lock[i]);
+  }
+}
 
 /**
  * Initializes the container data for the root process (the one with index 0).
@@ -46,6 +57,8 @@ void container_init(unsigned int mbi_addr)
   CONTAINER[0].parent = 0;
   CONTAINER[0].nchildren = 0;
   CONTAINER[0].used = 1;
+
+  cl_init();
 }
 
 
@@ -95,6 +108,8 @@ unsigned int container_split(unsigned int id, unsigned int quota)
 {
   unsigned int child, nc;
 
+  spinlock_acquire(&container_lock[id]);
+
   nc = CONTAINER[id].nchildren;
   child = id * MAX_CHILDREN + 1 + nc; //container index for the child process
 
@@ -110,6 +125,8 @@ unsigned int container_split(unsigned int id, unsigned int quota)
   CONTAINER[id].usage += quota;
   CONTAINER[id].nchildren = nc + 1;
 
+  spinlock_release(&container_lock[id]);
+
   return child;
 }
 
@@ -122,21 +139,28 @@ unsigned int container_split(unsigned int id, unsigned int quota)
 unsigned int container_alloc(unsigned int id)
 {
   unsigned int u, q, i;
+  spinlock_acquire(&container_lock[id]);
   u = CONTAINER[id].usage;
   q = CONTAINER[id].quota;
-  if (u == q) return 0;
+  if (u == q){
+    spinlock_release(&container_lock[id]);
+    return 0;
+  }
 
   CONTAINER[id].usage = u + 1;
   i = palloc();
+  spinlock_release(&container_lock[id]);
   return i;
 }
 
 // frees the physical page and reduces the usage by 1.
 void container_free(unsigned int id, unsigned int page_index)
 {
+  spinlock_acquire(&container_lock[id]);
   if (at_is_allocated(page_index)) {
     pfree(page_index);
     if (CONTAINER[id].usage > 0)
       CONTAINER[id].usage -= 1;
   }
+  spinlock_release(&container_lock[id]);
 }

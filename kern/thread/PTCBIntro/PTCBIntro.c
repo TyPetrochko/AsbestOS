@@ -12,9 +12,10 @@
  */
 struct TCB {
 	t_state state;
+	unsigned int cpuid;
 	unsigned int prev;
 	unsigned int next;
-};
+} in_cache_line;
 
 struct TCB TCBPool[NUM_IDS];
 
@@ -49,9 +50,20 @@ void tcb_set_next(unsigned int pid, unsigned int next_pid)
 	TCBPool[pid].next = next_pid;
 }
 
+void tcb_set_cpu(unsigned int pid, unsigned int cpu)
+{
+	TCBPool[pid].cpuid = cpu;
+}
+
+unsigned int tcb_get_cpu(unsigned int pid)
+{
+	return TCBPool[pid].cpuid;
+}
+
 void tcb_init_at_id(unsigned int pid)
 {
 	TCBPool[pid].state = TSTATE_DEAD;
+	TCBPool[pid].cpuid = NUM_CPUS;
 	TCBPool[pid].prev = NUM_IDS;
 	TCBPool[pid].next = NUM_IDS;
 }

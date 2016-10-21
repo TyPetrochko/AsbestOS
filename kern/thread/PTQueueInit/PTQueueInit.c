@@ -13,14 +13,9 @@ void tqueue_init(unsigned int mbi_addr)
 	tcb_init(mbi_addr);
 
 	chid = 0;
-	cpu_idx = 0;
-	while (cpu_idx < NUM_CPUS) {
-		while (chid <= NUM_IDS) {
-			tqueue_init_at_id(cpu_idx, chid);
-			chid++;
-		}
-		chid = 0;
-		cpu_idx++;
+	while (chid < NUM_IDS + NUM_CPUS) {
+		tqueue_init_at_id(chid);
+		chid++;
 	}
 }
 

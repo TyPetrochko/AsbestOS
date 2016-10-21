@@ -19,7 +19,6 @@ unsigned int alloc_page (unsigned int proc_index, unsigned int vaddr, unsigned i
 	unsigned int pi;
 	unsigned int result;
 
-	pt_spinlock_acquire();
 	pi = container_alloc (proc_index);
 
 	if (pi == 0)
@@ -28,7 +27,6 @@ unsigned int alloc_page (unsigned int proc_index, unsigned int vaddr, unsigned i
 		result = map_page (proc_index, vaddr, pi, perm);
 
 
-	pt_spinlock_release();
 	return result;
 }
 
