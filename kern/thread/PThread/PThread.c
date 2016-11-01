@@ -29,15 +29,17 @@ void thread_init(unsigned int mbi_addr)
  */
 unsigned int thread_spawn(void *entry, unsigned int id, unsigned int quota)
 {
-	spinlock_acquire(&locks[get_pcpu_idx()]);
+	int cpu_index = get_pcpu_idx();
+	spinlock_acquire(&locks[cpu_index]);
+
 	unsigned int pid;
 
 	pid = kctx_new(entry, id, quota);
-	tcb_set_cpu(pid, get_pcpu_idx());
+	tcb_set_cpu(pid, cpu_index);
 	tcb_set_state(pid, TSTATE_READY);
-	tqueue_enqueue(NUM_IDS + get_pcpu_idx(), pid);
+	tqueue_enqueue(NUM_IDS + cpu_index, pid);
 
-	spinlock_release(&locks[get_pcpu_idx()]);
+	spinlock_release(&locks[cpu_index]);
 	return pid;
 }
 
@@ -52,22 +54,23 @@ unsigned int thread_spawn(void *entry, unsigned int id, unsigned int quota)
  */
 void thread_yield(void)
 {
-	spinlock_acquire(&locks[get_pcpu_idx()]);
+	int cpu_index = get_pcpu_idx();
+	spinlock_acquire(&locks[cpu_index]);
 	unsigned int old_cur_pid;
 	unsigned int new_cur_pid;
 
 	old_cur_pid = get_curid();
 	tcb_set_state(old_cur_pid, TSTATE_READY);
-	tqueue_enqueue(NUM_IDS + get_pcpu_idx(), old_cur_pid);
+	tqueue_enqueue(NUM_IDS + cpu_index, old_cur_pid);
 
-	new_cur_pid = tqueue_dequeue(NUM_IDS + get_pcpu_idx());
+	new_cur_pid = tqueue_dequeue(NUM_IDS + cpu_index);
 	tcb_set_state(new_cur_pid, TSTATE_RUN);
 	set_curid(new_cur_pid);
 
 	if (old_cur_pid != new_cur_pid){
-		spinlock_release(&locks[get_pcpu_idx()]);
+		spinlock_release(&locks[cpu_index]);
 		kctx_switch(old_cur_pid, new_cur_pid);
 	} else {
-		spinlock_release(&locks[get_pcpu_idx()]);
+		spinlock_release(&locks[cpu_index]);
 	}
 }
