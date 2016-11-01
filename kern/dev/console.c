@@ -10,6 +10,8 @@
 
 #define BUFLEN 1024
 static char linebuf[BUFLEN];
+//lock buffer modifications
+spinlock_t lock;
 
 struct {
 	char buf[CONSOLE_BUFFER_SIZE];
@@ -22,11 +24,13 @@ cons_init()
 	memset(&cons, 0x0, sizeof(cons));
 	serial_init();
 	video_init();
+  spinlock_init(&lock);
 }
 
 void
 cons_intr(int (*proc)(void))
 {
+  spinlock_acquire(&lock);
 	int c;
 
 	while ((c = (*proc)()) != -1) {
@@ -36,12 +40,14 @@ cons_intr(int (*proc)(void))
 		if (cons.wpos == CONSOLE_BUFFER_SIZE)
 			cons.wpos = 0;
 	}
+  spinlock_release(&lock);
 
 }
 
 char
 cons_getc(void)
 {
+  spinlock_acquire(&lock);
   int c;
 
 
@@ -56,9 +62,10 @@ cons_getc(void)
     c = cons.buf[cons.rpos++];
     if (cons.rpos == CONSOLE_BUFFER_SIZE)
       cons.rpos = 0;
+    spinlock_release(&lock);
     return c;
   }
-
+  spinlock_release(&lock);
   return 0;
 }
 
