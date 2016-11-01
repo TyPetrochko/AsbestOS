@@ -9,6 +9,7 @@
 
 //1 lock for each queue
 spinlock_t locks[NUM_CPUS];
+unsigned int timeSinceSwitch[NUM_CPUS];
 
 void thread_init(unsigned int mbi_addr)
 {
@@ -19,6 +20,7 @@ void thread_init(unsigned int mbi_addr)
 	int i;
 	for (i = 0; i < NUM_CPUS; i++) {
 		spinlock_init(&locks[i]);
+		timeSinceSwitch[i] = 0;
 	}
 }
 
@@ -73,4 +75,18 @@ void thread_yield(void)
 	} else {
 		spinlock_release(&locks[cpu_index]);
 	}
+}
+
+//update the time since switch for a given cpu
+//we dont need locking since every cpu only updates its own array indece? I think
+void sched_update(void) {
+	int cpu_index = get_pcpu_idx();
+	timeSinceSwitch[cpu_index] += 1000 / LAPIC_TIMER_INTR_FREQ;
+	//check whether we need to switch
+	if (timeSinceSwitch[cpu_index] >= SCHED_SLICE) {
+		timeSinceSwitch[cpu_index] = 0;
+		thread_yield();
+	}
+	return;
+
 }

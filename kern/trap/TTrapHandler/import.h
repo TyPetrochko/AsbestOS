@@ -6,6 +6,7 @@
 unsigned int syscall_get_arg1(void);
 void set_pdir_base(unsigned int);
 void proc_start_user(void);
+void sched_update(void);
 
 #endif /* _KERN_ */
 
