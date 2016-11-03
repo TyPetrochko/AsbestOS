@@ -140,8 +140,12 @@ void trap (tf_t *tf)
 {
     unsigned int cur_pid;
     unsigned int in_kernel;
+    unsigned int previous_pid;
 
     cur_pid = get_curid ();
+   
+    last_pid[get_pcpu_idx()] = cur_pid;
+
     set_pdir_base (0); //switch to the kernel's page table.
 
     trap_cb_t f;
@@ -155,7 +159,10 @@ void trap (tf_t *tf)
                             tf->trapno, cur_pid, tf->eip);
     }
 
-    kstack_switch(cur_pid);
+    if(last_pid[get_pcpu_idx()] != cur_pid)
+      kstack_switch(cur_pid);
+    
     set_pdir_base(cur_pid);
 	  trap_return((void *) tf);
 }
+

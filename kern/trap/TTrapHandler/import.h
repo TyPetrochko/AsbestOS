@@ -3,6 +3,8 @@
 
 #ifdef _KERN_
 
+extern unsigned int last_pid[NUM_CPUS];
+
 unsigned int syscall_get_arg1(void);
 void set_pdir_base(unsigned int);
 void proc_start_user(void);

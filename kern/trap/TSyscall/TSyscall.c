@@ -86,7 +86,18 @@ void sys_spawn(tf_t *tf)
 	elf_id = syscall_get_arg2(tf);
 	quota = syscall_get_arg3(tf);
 
-	if (elf_id == 1) {
+  // Validations!
+  if(!container_can_consume(get_curid(), quota)){
+    syscall_set_errno(tf, E_EXCEEDS_QUOTA);
+    syscall_set_retval1(tf, NUM_IDS);
+    return;
+  }else if(container_get_nchildren(get_curid()) >= MAX_CHILDREN){
+    syscall_set_errno(tf, E_MAX_NUM_CHILDEN_REACHED);
+    syscall_set_retval1(tf, NUM_IDS);
+    return;
+  }
+	
+  if (elf_id == 1) {
 		elf_addr = _binary___obj_user_pingpong_ping_start;
 	} else if (elf_id == 2) {
 		elf_addr = _binary___obj_user_pingpong_pong_start;
@@ -101,7 +112,7 @@ void sys_spawn(tf_t *tf)
 	new_pid = proc_create(elf_addr, quota);
 
 	if (new_pid == NUM_IDS) {
-		syscall_set_errno(tf, E_INVAL_PID);
+		syscall_set_errno(tf, E_INVAL_CHILD_ID);
 		syscall_set_retval1(tf, NUM_IDS);
 	} else {
 		syscall_set_errno(tf, E_SUCC);

@@ -3,6 +3,9 @@
 #include <dev/intr.h>
 #include "import.h"
 
+// Track last pid on each CPU
+unsigned int last_pid[NUM_CPUS];
+
 int inited = FALSE;
 
 void
@@ -36,6 +39,11 @@ trap_init(unsigned int cpu_idx){
 	} else {
 		KERN_INFO("[AP%d KERN] Register trap handlers ... \n", cpu_idx);
 	}
+
+  // initialized last pid per CPU
+  for(i = 0; i < NUM_CPUS; i++){
+    last_pid[i] = NUM_CPUS + 1;
+  }
 
 	//setup exceptions
 	for (i = 0; i < 32; i++) {
@@ -72,6 +80,5 @@ trap_init(unsigned int cpu_idx){
 	} else {
 		KERN_INFO("[AP%d KERN] Done.\n", cpu_idx);
 	}
-
 }
 
