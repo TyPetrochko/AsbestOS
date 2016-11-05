@@ -67,4 +67,10 @@ void cv_wait(CV *cond, unsigned int pid, Lock *lock);
 
 void cv_signal(CV *cond);
 
+void buffer_init();
+
+void buffer_put(int new);
+
+int buffer_get();
+
 #endif

@@ -121,6 +121,9 @@ void buffer_init() {
 	cv_init(&(b.full));
 }
 
+//again, only one buffer needed
+buffer_init();
+
 void buffer_put(int new) {
 	lock_aquire(&(b.lock));
 	unsigned int pid = get_curid();
