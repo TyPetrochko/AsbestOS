@@ -14,6 +14,9 @@ KERN_SRCFILES	+= $(KERN_DIR)/lib/pmap.c
 KERN_SRCFILES	+= $(KERN_DIR)/lib/elf.c
 KERN_SRCFILES	+= $(KERN_DIR)/lib/kstack.c
 KERN_SRCFILES	+= $(KERN_DIR)/lib/spinlock.c
+KERN_SRCFILES	+= $(KERN_DIR)/lib/structures.c
+
+
 
 $(KERN_OBJDIR)/lib/%.o: $(KERN_DIR)/lib/%.c
 	@echo + cc[KERN/lib] $<
