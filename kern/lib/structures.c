@@ -110,9 +110,10 @@ void cv_signal(CV *cond) {
 //UTIL -- Bounded Buffer
 
 //we only ever need one buffer, so declare it
-Buffer b;
+BB b;
 
 void buffer_init() {
+	//initialization
 	b.head = 0;
 	//tail is upper bound, all values are between head inclusive and tail non-inclusive
 	b.tail = 0;
@@ -121,7 +122,7 @@ void buffer_init() {
 	cv_init(&(b.full));
 }
 
-//again, only one buffer needed
+//again, only have one buffer
 buffer_init();
 
 void buffer_put(int new) {

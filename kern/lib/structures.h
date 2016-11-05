@@ -28,7 +28,7 @@ typedef struct bounded_buffer {
 	Lock lock;
 	CV empty;
 	CV full;
-} Buffer;
+} BB;
 
 //functions from PThread
 
@@ -72,5 +72,8 @@ void buffer_init();
 void buffer_put(int new);
 
 int buffer_get();
+
+//other functions to import
+unsigned int get_curid();
 
 #endif
