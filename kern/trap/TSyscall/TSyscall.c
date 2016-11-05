@@ -7,6 +7,95 @@
 #include <pcpu/PCPUIntro/export.h>
 
 #include "import.h"
+#define LOCK_FREE (1)
+#define LOCK_BUSY (0)
+
+// DATA STRUCTURES
+typedef struct queue {
+  unsigned int processes[NUM_IDS];
+  unsigned int head;
+  unsigned int tail;
+} queue;
+
+typedef struct Lock {
+  int free;
+  spinlock_t spinlock;
+  queue waiting;
+} Lock;
+
+typedef struct CV {
+  // TODO
+} CV;
+
+// UTIL
+void queue_init(queue *q){
+  q->head = 0;
+  q->tail = 0;
+}
+
+void enqueue(queue *q, unsigned int pid){
+  q->process[q->tail] = pid;
+  q->tail = q->tail + 1 % NUM_IDS;
+}
+
+unsigned int dequeue(queue *q){
+  unsigned int ret = q->process[q->head];
+  q->head = q->head + 1 % NUM_IDS;
+}
+
+int queue_empty(queue *q){
+  return (q->head == q->tail);
+}
+
+void lock_init(Lock *lock){
+  lock->free = LOCK_FREE;
+  spinlock_init(&(lock->spinlock));
+  queue_init(&(lock->waiting));
+}
+
+// UTIL
+void lock_aquire(Lock *lock, tf_t *tf){
+  unsigned int pid, cpu;
+
+  // required for storing within lock
+  pid = get_curid();
+  cpu = get_pcpu_idx();
+
+  intr_local_disable();
+  spinlock_acquire(&(lock->spinlock));
+
+  if(lock->free == LOCK_BUSY){
+    // wait on this lock
+    enqueue(&(lock->queue), pid);
+    // sleep indefinitely (wait for release to be called)
+    thread_sleep(&(lock->spinlock));
+    // acquire lock spinlock again since thread_sleep releases it
+    spinlock_acquire(&(lock->spinlock));
+  }
+
+  // we've acquired the lock! It should not have been set to free in meantime
+  if(lock->free != LOCK_BUSY)
+    KERN_PANIC("Somehow lock became free while waiting on it.\n");
+
+  spinlock_release(&(lock->spinlock));
+  intr_local_enable();
+}
+
+void lock_release(Lock *lock){
+  intr_local_disable();
+  spinlock_acquire(&(lock->spinlock));
+
+  if(!queue_empty(&(lock->waiting))){
+    // wake up the next thread waiting on this lock
+    thread_wake(dequeue(&(lock->waiting)));
+  }else{
+    // lock is ready to be picked up by anyone!
+    lock->free = LOCK_FREE;
+  }
+  
+  spinlock_release(&(lock->spinlock));
+  intr_local_enable();
+}
 
 static char sys_buf[NUM_IDS][PAGESIZE];
 
@@ -77,14 +166,12 @@ extern uint8_t _binary___obj_user_pingpong_ding_start[];
  */
 void sys_spawn(tf_t *tf)
 {
-  //TODO: improve the implementation by adding the missing argument checks to
-  //make sure the calll to sys_spawn never goes wrong.
 	unsigned int new_pid;
 	unsigned int elf_id, quota;
 	void *elf_addr;
 
 	elf_id = syscall_get_arg2(tf);
-	quota = syscall_get_arg3(tf);
+  quota = syscall_get_arg3(tf);
 
   // Validations!
   if(!container_can_consume(get_curid(), quota)){
@@ -134,22 +221,22 @@ void sys_yield(tf_t *tf)
 
 void sys_produce(tf_t *tf)
 {
-  unsigned int i;
-  for(i = 0; i < 5; i++) {
-    intr_local_disable();
-    KERN_DEBUG("CPU %d: Process %d: Produced %d\n", get_pcpu_idx(), get_curid(), i);
-    intr_local_enable();
-  }
-	syscall_set_errno(tf, E_SUCC);
+  // unsigned int i;
+  // for(i = 0; i < 5; i++) {
+  //   intr_local_disable();
+  //   KERN_DEBUG("CPU %d: Process %d: Produced %d\n", get_pcpu_idx(), get_curid(), i);
+  //   intr_local_enable();
+  // }
+	// syscall_set_errno(tf, E_SUCC);
 }
 
 void sys_consume(tf_t *tf)
 {
-  unsigned int i;
-  for(i = 0; i < 5; i++) {
-    intr_local_disable();
-    KERN_DEBUG("CPU %d: Process %d: Consumed %d\n", get_pcpu_idx(), get_curid(), i);
-    intr_local_enable();
-  }
-	syscall_set_errno(tf, E_SUCC);
+  // unsigned int i;
+  // for(i = 0; i < 5; i++) {
+  //   intr_local_disable();
+  //   KERN_DEBUG("CPU %d: Process %d: Consumed %d\n", get_pcpu_idx(), get_curid(), i);
+  //   intr_local_enable();
+  // }
+	// syscall_set_errno(tf, E_SUCC);
 }
