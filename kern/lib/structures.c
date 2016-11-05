@@ -1,7 +1,16 @@
 #include <lib/debug.h>
 #include <lib/x86.h>
+#include <lib/spinlock.h>
+#include <lib/types.h>
+#include <lib/trap.h>
+#include <lib/syscall.h>
+#include <dev/intr.h>
+#include <pcpu/PCPUIntro/export.h>
 
 #include "structures.h"
+
+#define LOCK_FREE (1)
+#define LOCK_BUSY (0)
 
 // UTIL -- QUEUE
 void queue_init(queue *q){
@@ -10,12 +19,12 @@ void queue_init(queue *q){
 }
 
 void enqueue(queue *q, unsigned int pid){
-  q->process[q->tail] = pid;
+  q->processes[q->tail] = pid;
   q->tail = q->tail + 1 % NUM_IDS;
 }
 
 unsigned int dequeue(queue *q){
-  unsigned int ret = q->process[q->head];
+  unsigned int ret = q->processes[q->head];
   q->head = q->head + 1 % NUM_IDS;
 }
 
@@ -30,7 +39,7 @@ void lock_init(Lock *lock){
   queue_init(&(lock->waiting));
 }
 
-void lock_aquire(Lock *lock, tf_t *tf){
+void lock_aquire(Lock *lock){
   unsigned int pid, cpu;
 
   // required for storing within lock
@@ -79,7 +88,7 @@ void cv_init(CV *cond) {
   queue_init(&(cond->waiting));
 }
 
-void cv_wait(CV *cond, unsigned int pid, Lock, *lock) {
+void cv_wait(CV *cond, unsigned int pid, Lock *lock) {
   intr_local_disable();
   //put pid on cv's queue
   enqueue(&(cond->waiting), pid);

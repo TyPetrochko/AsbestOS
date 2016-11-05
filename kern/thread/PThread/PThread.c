@@ -120,7 +120,8 @@ void thread_wake(unsigned int pid){
 	spinlock_acquire(&locks[cpu_index]);
 	
 	tcb_set_state(pid, TSTATE_READY);
-	tqueue_enqueue(NUM_IDS + cpu_index, old_cur_pid);
+	//WHY NUM_IDS + cpu index????
+	tqueue_enqueue(NUM_IDS + cpu_index, pid);
 
   spinlock_release(&locks[cpu_index]);
 }

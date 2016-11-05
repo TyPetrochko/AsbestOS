@@ -8,8 +8,6 @@
 #include <lib/structures.h>
 
 #include "import.h"
-#define LOCK_FREE (1)
-#define LOCK_BUSY (0)
 
 static char sys_buf[NUM_IDS][PAGESIZE];
 

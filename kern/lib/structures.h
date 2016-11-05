@@ -1,5 +1,7 @@
 #ifdef _KERN_
 
+#include <lib/spinlock.h>
+
 // DATA STRUCTURES
 typedef struct queue {
   unsigned int processes[NUM_IDS];
@@ -29,7 +31,7 @@ int queue_empty(queue *q);
 // UTIL -- LOCKS
 void lock_init(Lock *lock);
 
-void lock_aquire(Lock *lock, tf_t *tf);
+void lock_aquire(Lock *lock);
 
 void lock_release(Lock *lock);
 
@@ -37,7 +39,7 @@ void lock_release(Lock *lock);
 
 void cv_init(CV *cond);
 
-void cv_wait(CV *cond, unsigned int pid, Lock, *lock);
+void cv_wait(CV *cond, unsigned int pid, Lock *lock);
 
 void cv_signal(CV *cond);
 
