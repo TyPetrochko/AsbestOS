@@ -24,10 +24,10 @@ typedef struct Lock {
 } Lock;
 
 typedef struct CV {
-  // TODO
+  queue waiting;
 } CV;
 
-// UTIL
+// UTIL -- QUEUE
 void queue_init(queue *q){
   q->head = 0;
   q->tail = 0;
@@ -47,13 +47,13 @@ int queue_empty(queue *q){
   return (q->head == q->tail);
 }
 
+// UTIL -- LOCKS
 void lock_init(Lock *lock){
   lock->free = LOCK_FREE;
   spinlock_init(&(lock->spinlock));
   queue_init(&(lock->waiting));
 }
 
-// UTIL
 void lock_aquire(Lock *lock, tf_t *tf){
   unsigned int pid, cpu;
 
@@ -66,7 +66,7 @@ void lock_aquire(Lock *lock, tf_t *tf){
 
   if(lock->free == LOCK_BUSY){
     // wait on this lock
-    enqueue(&(lock->queue), pid);
+    enqueue(&(lock->waiting), pid);
     // sleep indefinitely (wait for release to be called)
     thread_sleep(&(lock->spinlock));
     // acquire lock spinlock again since thread_sleep releases it
@@ -96,6 +96,30 @@ void lock_release(Lock *lock){
   spinlock_release(&(lock->spinlock));
   intr_local_enable();
 }
+
+//UTIL -- CV
+
+void cv_init(CV *cond) {
+  queue_init(&(cond->waiting));
+}
+
+void cv_wait(CV *cond, unsigned int pid, Lock, *lock) {
+  intr_local_disable();
+  //put pid on cv's queue
+  enqueue(&(cond->waiting), pid);
+  intr_local_enable();
+}
+
+void cv_signal(CV *cond) {
+  intr_local_disable();
+  intr_local_enable();
+}
+
+
+
+
+
+
 
 static char sys_buf[NUM_IDS][PAGESIZE];
 
