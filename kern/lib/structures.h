@@ -20,6 +20,8 @@ typedef struct Lock {
 } Lock;
 
 typedef struct CV {
+  spinlock_t spinlock; // used to protect ticket
+  unsigned int ticket; // used to signal waiting pids...
   queue waiting;
 } CV;
 
@@ -65,7 +67,7 @@ void lock_release(Lock *lock);
 
 void cv_init(CV *cond);
 
-void cv_wait(CV *cond, unsigned int pid, Lock *lock);
+void cv_wait(CV *cond, Lock *lock);
 
 void cv_signal(CV *cond);
 
