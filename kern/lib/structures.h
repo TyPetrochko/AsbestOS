@@ -2,6 +2,8 @@
 
 #include <lib/spinlock.h>
 
+#define BUFFER_SIZE (15)
+
 // DATA STRUCTURES
 typedef struct queue {
   unsigned int processes[NUM_IDS];
@@ -18,6 +20,15 @@ typedef struct Lock {
 typedef struct CV {
   queue waiting;
 } CV;
+
+typedef struct bounded_buffer {
+	int head;
+	int tail;
+	int buffer[BUFFER_SIZE];
+	Lock lock;
+	CV empty;
+	CV full;
+} Buffer;
 
 //functions from PThread
 

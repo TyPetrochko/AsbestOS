@@ -106,3 +106,53 @@ void cv_signal(CV *cond) {
   }
   intr_local_enable();
 }
+
+//UTIL -- Bounded Buffer
+
+//we only ever need one buffer, so declare it
+Buffer b;
+
+void buffer_init() {
+	b.head = 0;
+	//tail is upper bound, all values are between head inclusive and tail non-inclusive
+	b.tail = 0;
+	lock_init(&(b.lock));
+	cv_init(&(b.empty));
+	cv_init(&(b.full));
+}
+
+void buffer_put(int new) {
+	lock_aquire(&(b.lock));
+	unsigned int pid = get_curid();
+
+	//use while loop for wait
+	//while full
+	while ((b.tail - b.head) == BUFFER_SIZE) {
+		cv_wait(&(b.full), pid, &(b.lock));
+	}
+
+	//update vals
+	b.buffer[b.tail % BUFFER_SIZE] = new;
+	b.tail++;
+	//signal anyone waiting on empty
+	cv_signal(&(b.empty));
+	lock_release(&(b.lock));
+}
+
+int buffer_get() {
+	lock_aquire(&(b.lock));
+	unsigned int pid = get_curid();
+
+	//wait for not empty
+	while (b.head == b.tail) {
+		cv_wait(&(b.empty), pid, &(b.lock));
+	}
+
+	//update vals
+	int retval = b.buffer[b.head % BUFFER_SIZE];
+	b.head++;
+
+	//signal to anyone waiting on full
+	cv_signal(&(b.full));
+	lock_release(&(b.lock));
+}
