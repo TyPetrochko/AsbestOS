@@ -33,13 +33,16 @@ int queue_empty(queue *q){
 }
 
 // UTIL -- LOCKS
+int lock_ctr = 0;
+
 void lock_init(Lock *lock){
+  lock->id = lock_ctr++;
   lock->free = LOCK_FREE;
   spinlock_init(&(lock->spinlock));
   queue_init(&(lock->waiting));
 }
 
-void lock_aquire(Lock *lock){
+void lock_acquire(Lock *lock){
   unsigned int pid, cpu;
 
   // required for storing within lock
@@ -50,19 +53,28 @@ void lock_aquire(Lock *lock){
   spinlock_acquire(&(lock->spinlock));
 
   if(lock->free == LOCK_BUSY){
+    KERN_DEBUG("Process %u waiting on lock %d...\n", pid, lock->id);
     // wait on this lock
     enqueue(&(lock->waiting), pid);
     // sleep indefinitely (wait for release to be called)
-    thread_sleep(&(lock->spinlock));
+    while(lock->holder != pid){
+      spinlock_release(&(lock->spinlock));
+      thread_yield();
+      spinlock_acquire(&(lock->spinlock));
+    }
     // acquire lock spinlock again since thread_sleep releases it
     spinlock_acquire(&(lock->spinlock));
+    // we've acquired the lock! It should not have been set to free in meantime
+    if(lock->free != LOCK_BUSY)
+      KERN_PANIC("Somehow lock became free while waiting on it.\n");
+  }else{
+    lock->free = LOCK_BUSY;
+    lock->holder = pid;
   }
-
-  // we've acquired the lock! It should not have been set to free in meantime
-  if(lock->free != LOCK_BUSY)
-    KERN_PANIC("Somehow lock became free while waiting on it.\n");
-
+  
   spinlock_release(&(lock->spinlock));
+  
+  KERN_DEBUG("Process %u acquired lock %d...\n", pid, lock->id);
   intr_local_enable();
 }
 
@@ -72,10 +84,12 @@ void lock_release(Lock *lock){
 
   if(!queue_empty(&(lock->waiting))){
     // wake up the next thread waiting on this lock
-    thread_wake(dequeue(&(lock->waiting)));
+    lock->holder = dequeue(&(lock->waiting));
+    KERN_DEBUG("Process %u passed lock %d to %u...\n", get_curid(), lock->id, lock->holder);
   }else{
     // lock is ready to be picked up by anyone!
     lock->free = LOCK_FREE;
+    KERN_DEBUG("Process %u released lock %d...\n", get_curid(), lock->id);
   }
   
   spinlock_release(&(lock->spinlock));
@@ -94,7 +108,7 @@ void cv_wait(CV *cond, unsigned int pid, Lock *lock) {
   enqueue(&(cond->waiting), pid);
   //sleep on variable and release lock
   thread_sleep_with_lock(lock);
-  lock_aquire(lock);
+  lock_acquire(lock);
   intr_local_enable();
 }
 
@@ -109,54 +123,48 @@ void cv_signal(CV *cond) {
 
 //UTIL -- Bounded Buffer
 
-//we only ever need one buffer, so declare it
-BB b;
-
-void buffer_init() {
+void buffer_init(BB *buffer) {
 	//initialization
-	b.head = 0;
+	buffer->head = 0;
 	//tail is upper bound, all values are between head inclusive and tail non-inclusive
-	b.tail = 0;
-	lock_init(&(b.lock));
-	cv_init(&(b.empty));
-	cv_init(&(b.full));
+	buffer->tail = 0;
+	lock_init(&(buffer->lock));
+	cv_init(&(buffer->empty));
+	cv_init(&(buffer->full));
 }
 
-//again, only have one buffer
-buffer_init();
-
-void buffer_put(int new) {
-	lock_aquire(&(b.lock));
+void buffer_put(int data, BB *buffer) {
+	lock_acquire(&(buffer->lock));
 	unsigned int pid = get_curid();
 
 	//use while loop for wait
 	//while full
-	while ((b.tail - b.head) == BUFFER_SIZE) {
-		cv_wait(&(b.full), pid, &(b.lock));
+	while ((buffer->tail - buffer->head) == BUFFER_SIZE) {
+		cv_wait(&(buffer->full), pid, &(buffer->lock));
 	}
 
 	//update vals
-	b.buffer[b.tail % BUFFER_SIZE] = new;
-	b.tail++;
+	buffer->buffer[buffer->tail % BUFFER_SIZE] = data;
+	buffer->tail++;
 	//signal anyone waiting on empty
-	cv_signal(&(b.empty));
-	lock_release(&(b.lock));
+	cv_signal(&(buffer->empty));
+	lock_release(&(buffer->lock));
 }
 
-int buffer_get() {
-	lock_aquire(&(b.lock));
+int buffer_get(BB *buffer) {
+	lock_acquire(&(buffer->lock));
 	unsigned int pid = get_curid();
 
 	//wait for not empty
-	while (b.head == b.tail) {
-		cv_wait(&(b.empty), pid, &(b.lock));
+	while (buffer->head == buffer->tail) {
+		cv_wait(&(buffer->empty), pid, &(buffer->lock));
 	}
 
 	//update vals
-	int retval = b.buffer[b.head % BUFFER_SIZE];
-	b.head++;
+	int retval = buffer->buffer[buffer->head % BUFFER_SIZE];
+	buffer->head++;
 
 	//signal to anyone waiting on full
-	cv_signal(&(b.full));
-	lock_release(&(b.lock));
+	cv_signal(&(buffer->full));
+	lock_release(&(buffer->lock));
 }

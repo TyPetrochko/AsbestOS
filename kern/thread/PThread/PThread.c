@@ -104,6 +104,10 @@ void thread_sleep(spinlock_t* sl){
 
   spinlock_release(&locks[cpu_index]);
   spinlock_release(sl);
+
+  if(new_cur_pid == NUM_IDS)
+    KERN_PANIC("No thread waiting to run after %u goes to sleep!\n", old_cur_pid);
+
   kctx_switch(old_cur_pid, new_cur_pid);
 }
 

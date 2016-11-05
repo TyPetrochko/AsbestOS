@@ -12,7 +12,9 @@ typedef struct queue {
 } queue;
 
 typedef struct Lock {
+  int id;
   int free;
+  unsigned int holder;
   spinlock_t spinlock;
   queue waiting;
 } Lock;
@@ -55,7 +57,7 @@ int queue_empty(queue *q);
 // UTIL -- LOCKS
 void lock_init(Lock *lock);
 
-void lock_aquire(Lock *lock);
+void lock_acquire(Lock *lock);
 
 void lock_release(Lock *lock);
 
@@ -67,11 +69,11 @@ void cv_wait(CV *cond, unsigned int pid, Lock *lock);
 
 void cv_signal(CV *cond);
 
-void buffer_init();
+void buffer_init(BB *buffer);
 
-void buffer_put(int new);
+void buffer_put(int data, BB *buffer);
 
-int buffer_get();
+int buffer_get(BB *buffer);
 
 //other functions to import
 unsigned int get_curid();
