@@ -107,6 +107,26 @@ void thread_sleep(spinlock_t* sl){
   kctx_switch(old_cur_pid, new_cur_pid);
 }
 
+//copy of thread sleep but using a regular lock
+void thread_sleep_with_lock(Lock *lock) {
+	lock_release(lock);
+
+	int cpu_index = get_pcpu_idx();
+	spinlock_acquire(&locks[cpu_index]);
+	unsigned int old_cur_pid;
+	unsigned int new_cur_pid;
+
+	old_cur_pid = get_curid();
+	tcb_set_state(old_cur_pid, TSTATE_SLEEP);
+
+	new_cur_pid = tqueue_dequeue(NUM_IDS + cpu_index);
+	tcb_set_state(new_cur_pid, TSTATE_RUN);
+	set_curid(new_cur_pid);
+
+  spinlock_release(&locks[cpu_index]);
+  kctx_switch(old_cur_pid, new_cur_pid);
+}
+
 // wake up a sleeping thread
 void thread_wake(unsigned int pid){
     // PSEUDOCODE (pid):

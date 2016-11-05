@@ -92,10 +92,17 @@ void cv_wait(CV *cond, unsigned int pid, Lock *lock) {
   intr_local_disable();
   //put pid on cv's queue
   enqueue(&(cond->waiting), pid);
+  //sleep on variable and release lock
+  thread_sleep_with_lock(lock);
+  lock_aquire(lock);
   intr_local_enable();
 }
 
 void cv_signal(CV *cond) {
   intr_local_disable();
+  if (queue_empty(&(cond->waiting))) {
+  	unsigned int pid = dequeue(&(cond->waiting));
+  	thread_wake(pid);
+  }
   intr_local_enable();
 }

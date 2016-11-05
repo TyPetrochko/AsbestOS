@@ -19,6 +19,19 @@ typedef struct CV {
   queue waiting;
 } CV;
 
+//functions from PThread
+
+void thread_init(unsigned int mbi_addr);
+unsigned int thread_spawn(void *entry, unsigned int id, unsigned int quota);
+void thread_yield(void);
+void thread_update(void);
+void sched_update(void);
+void thread_sleep(spinlock_t* sl);
+void thread_sleep_with_lock(Lock *lock);
+void thread_wake(unsigned int pid);
+
+//end functions from PThread
+
 
 // UTIL -- QUEUE
 void queue_init(queue *q);
