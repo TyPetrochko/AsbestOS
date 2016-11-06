@@ -12,6 +12,9 @@
 #define LOCK_FREE (1)
 #define LOCK_BUSY (0)
 
+//#define say(...) {intr_local_disable(); KERN_DEBUG(__VA_ARGS__); intr_local_enable();}
+#define say(...) {}
+
 // UTIL -- QUEUE
 void queue_init(queue *q){
   q->head = 0;
@@ -56,16 +59,19 @@ void lock_acquire(Lock *lock){
   spinlock_acquire(&(lock->spinlock));
 
   if(lock->free == LOCK_BUSY){
+    say("Process %u waiting on lock %d...\n", pid, lock->id);
     // wait on this lock
     enqueue(&(lock->waiting), pid);
     // sleep indefinitely (wait for release to be called)
     while(lock->holder != pid){
       spinlock_release(&(lock->spinlock));
+      say("Process %u busywaiting on lock %d...\n", pid, lock->id);
       intr_local_enable();
       thread_yield();
       intr_local_disable();
       spinlock_acquire(&(lock->spinlock));
     }
+    say("Process %u acquired lock %d...\n", pid, lock->id);
     // acquire lock spinlock again since thread_sleep releases it
     spinlock_acquire(&(lock->spinlock));
     // we've acquired the lock! It should not have been set to free in meantime
@@ -89,9 +95,11 @@ void lock_release(Lock *lock){
   if(!queue_empty(&(lock->waiting))){
     // wake up the next thread waiting on this lock
     lock->holder = dequeue(&(lock->waiting));
+    say("Process %u passed lock %d to %u...\n", get_curid(), lock->id, lock->holder);
   }else{
     // lock is ready to be picked up by anyone!
     lock->free = LOCK_FREE;
+    say("Process %u released lock %d...\n", get_curid(), lock->id);
   }
   
   spinlock_release(&(lock->spinlock));
@@ -116,6 +124,7 @@ void cv_wait(CV *cond, Lock *lock) {
   lock_release(lock);
   spinlock_acquire(&(cond->spinlock));
   if(cond->ticket != pid)
+    say("Process %u busywaiting!\n", pid);
   while(cond->ticket != pid){
     spinlock_release(&(cond->spinlock));
     intr_local_enable();
@@ -154,13 +163,17 @@ void buffer_init(BB *buffer) {
 
 void buffer_put(int data, BB *buffer) {
 	unsigned int pid = get_curid();
+  say("Process %u trying to put %d in buffer.\n", pid, data);
 	lock_acquire(&(buffer->lock));
+  say("Process %u acquired buffer's lock...\n", pid);
 
 	//use while loop for wait
 	//while full
 	while ((buffer->tail - buffer->head) == BUFFER_SIZE) {
+    say("Process %u waiting on full buffer\n", pid);
 		cv_wait(&(buffer->full), &(buffer->lock));
 	}
+  say("Process %u is done waiting for buffer...\n", pid);
 
 	//update vals
 	buffer->buffer[buffer->tail % BUFFER_SIZE] = data;
@@ -168,19 +181,26 @@ void buffer_put(int data, BB *buffer) {
   intr_local_disable();
   KERN_DEBUG("Process %u produced %d.\n", pid, data);
   intr_local_enable();
+  say("Process %u added %d to the buffer and is signalling!...\n", pid, data);
 	//signal anyone waiting on empty
 	cv_signal(&(buffer->empty));
+  say("Process %u signaled anyone waiting on empty buffer...\n", pid, data);
 	lock_release(&(buffer->lock));
+  say("Process %u released all its locks!\n", pid, data);
 }
 
 int buffer_get(BB *buffer) {
 	unsigned int pid = get_curid();
+  say("Process %u trying to get data from buffer.\n", pid);
 	lock_acquire(&(buffer->lock));
+  say("Process %u acquired buffer's lock...\n", pid);
 
 	//wait for not empty
 	while (buffer->head == buffer->tail) {
+    say("Process %u waiting empty buffer...\n", pid);
 		cv_wait(&(buffer->empty), &(buffer->lock));
 	}
+  say("Process %u is done waiting for buffer...\n", pid);
 
 	//update vals
 	int retval = buffer->buffer[buffer->head % BUFFER_SIZE];
