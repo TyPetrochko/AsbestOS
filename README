@@ -1,9 +1,3 @@
-List here the following info:
-1. who you have worked with; 
-2. whether you coded this assignment together, and if not, who worked on which part;
-3. brief description of what you have implemented;
-4. and anything else you would like us to know.
-
 Tyler Petrochko and Alexander Ringlein.
 
 Alex did parts 1 and 2, and Tyler did part 3. Both of us worked on part 4. Specifically, Tyler made a lock implementation (which we eventually replaced with a spinlock) and debugged/rewrote the bounded buffer implementation, while Alex wrote the original condition variable and bounded buffer code.
@@ -16,6 +10,7 @@ In part 3, we allowed timer interrupts to occur in specific places within the ke
 
 In part 4, we originally implemented sleeping locks from spinlocks, condition variables, and bounded buffers. Then, in combination, we used these objects to build an accurate sys_produce and sys_consume implementation. After some issues arose, we transitioned from using sleeping locks (locks that put the current thread's TCB state to TSTATE_SLEEP) to spinlocks.
 
-To show that our implementation works correctly, I added a printf-statement at the end of ping.c and pong.c, and modified init.c to run ping once and pong twice. That way, all of the integers added to the buffer are eventually consumed. To verify that the implementation works, two things must hold. First, a method cannot consume an integer that hasn't been produced yet (or has already been consumed). Second, all three processes must eventually finish, and ping must finish before the last pong process (since pong cannot finish consuming until ping has finished producing). Running mcertikos confirms via debug statements that these both hold.
+To show that our implementation works correctly, I added a printf-statement at the end of ping.c and pong.c, and modified init.c to run ping once and pong twice. That way, all of the integers added to the buffer are eventually consumed. To verify that the implementation works, two things must hold. First, a method cannot consume an integer that hasn't been produced yet (or has already been consumed). Second, all three processes must eventually finish, and ping must finish before the last pong process (since pong cannot finish consuming until ping has finished producing). Running mcertikos confirms via debug statements that these both hold. This also verifies that the system does not deadlock, since all of the processes eventually finish.
 
-This also verifies that the system does not deadlock, since all of the processes eventually finish.
+As a final note, we put most of our data structure-related code (queues, condition variables, bounded buffers, etc.) inside kern/lib/structures.c.
+
