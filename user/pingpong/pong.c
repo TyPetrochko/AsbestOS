@@ -12,6 +12,6 @@ int main (int argc, char **argv)
       if (i % 2 == 0)
         consume();
     }
-
+    printf("pong ended.\n");
     return 0;
 }

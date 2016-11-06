@@ -123,13 +123,16 @@ void cv_wait(CV *cond, Lock *lock) {
   //sleep on variable and release lock
   lock_release(lock);
   spinlock_acquire(&(cond->spinlock));
+  if(cond->ticket != pid)
+    say("Process %u busywaiting!\n", pid);
   while(cond->ticket != pid){
     spinlock_release(&(cond->spinlock));
     intr_local_enable();
-    thread_yield();
+    //thread_yield();
     intr_local_disable();
     spinlock_acquire(&(cond->spinlock));
   }
+  cond->ticket = NUM_IDS; // reset ticket
   lock_acquire(lock);
   spinlock_release(&(cond->spinlock));
   intr_local_enable();
@@ -175,7 +178,9 @@ void buffer_put(int data, BB *buffer) {
 	//update vals
 	buffer->buffer[buffer->tail % BUFFER_SIZE] = data;
 	buffer->tail++;
+  intr_local_disable();
   KERN_DEBUG("Process %u produced %d.\n", pid, data);
+  intr_local_enable();
   say("Process %u added %d to the buffer and is signalling!...\n", pid, data);
 	//signal anyone waiting on empty
 	cv_signal(&(buffer->empty));
@@ -199,7 +204,9 @@ int buffer_get(BB *buffer) {
 
 	//update vals
 	int retval = buffer->buffer[buffer->head % BUFFER_SIZE];
+  intr_local_disable();
   KERN_DEBUG("Process %u consumed %d.\n", pid, retval);
+  intr_local_enable();
 	buffer->head++;
 
 	//signal to anyone waiting on full
