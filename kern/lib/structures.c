@@ -38,65 +38,15 @@ int queue_empty(queue *q){
 int lock_ctr = 0;
 
 void lock_init(Lock *lock){
-  lock->id = lock_ctr++;
-  lock->free = LOCK_FREE;
   spinlock_init(&(lock->spinlock));
-  queue_init(&(lock->waiting));
 }
 
 void lock_acquire(Lock *lock){
   spinlock_acquire(&(lock->spinlock));
-  return;
-  unsigned int pid, cpu;
-
-  // required for storing within lock
-  pid = get_curid();
-  cpu = get_pcpu_idx();
-
-  intr_local_disable();
-  spinlock_acquire(&(lock->spinlock));
-
-  if(lock->free == LOCK_BUSY){
-    // wait on this lock
-    enqueue(&(lock->waiting), pid);
-    // sleep indefinitely (wait for release to be called)
-    while(lock->holder != pid){
-      spinlock_release(&(lock->spinlock));
-      intr_local_enable();
-      thread_yield();
-      intr_local_disable();
-      spinlock_acquire(&(lock->spinlock));
-    }
-    // acquire lock spinlock again since thread_sleep releases it
-    spinlock_acquire(&(lock->spinlock));
-    // we've acquired the lock! It should not have been set to free in meantime
-    if(lock->free != LOCK_BUSY)
-      KERN_PANIC("Somehow lock became free while waiting on it.\n");
-  }else{
-    lock->free = LOCK_BUSY;
-    lock->holder = pid;
-  }
-  
-  spinlock_release(&(lock->spinlock));
-  intr_local_enable();
 }
 
 void lock_release(Lock *lock){
   spinlock_release(&(lock->spinlock));
-  return;
-  intr_local_disable();
-  spinlock_acquire(&(lock->spinlock));
-
-  if(!queue_empty(&(lock->waiting))){
-    // wake up the next thread waiting on this lock
-    lock->holder = dequeue(&(lock->waiting));
-  }else{
-    // lock is ready to be picked up by anyone!
-    lock->free = LOCK_FREE;
-  }
-  
-  spinlock_release(&(lock->spinlock));
-  intr_local_enable();
 }
 
 //UTIL -- CV

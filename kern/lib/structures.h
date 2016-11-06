@@ -12,11 +12,7 @@ typedef struct queue {
 } queue;
 
 typedef struct Lock {
-  int id;
-  int free;
-  unsigned int holder;
   spinlock_t spinlock;
-  queue waiting;
 } Lock;
 
 typedef struct CV {

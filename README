@@ -3,3 +3,19 @@ List here the following info:
 2. whether you coded this assignment together, and if not, who worked on which part;
 3. brief description of what you have implemented;
 4. and anything else you would like us to know.
+
+Tyler Petrochko and Alexander Ringlein.
+
+Alex did parts 1 and 2, and Tyler did part 3. Both of us worked on part 4. Specifically, Tyler made a lock implementation (which we eventually replaced with a spinlock) and debugged/rewrote the bounded buffer implementation, while Alex wrote the original condition variable and bounded buffer code.
+
+In part 1, we added a mutual exclusion spinlock to console.c and debug.c to protect system calls that print to the console. We also added a mutual exclusion lock for each cpu to protect the thread_spawn and thread_yield functions in PThread.c. We also modified TTrapInit.c to initialize all of the trap handlers for each CPU. These additions allow basic multicore support for mcertikos.
+
+In part 2, we added support for preemptive multitasking. That is, we modified the timer interrupt handler to switch to another thread every SCHED_SLICE seconds. This prevents programs that enter an infinite loop from stalling the whole operating system, as processes must be interleaved even if they do not call thread_yield.
+
+In part 3, we allowed timer interrupts to occur in specific places within the kernel so that system calls can be preempted. We also added an optimization in trap that stores the last running thread on each CPU, so that the trap handler does not switch thread contexts if the next thread to be run is the same as the current thread. These additions are in TTrapHandler.c and TTrapHandler/import.h. We also added more specific error values for when sys_spawn goes wrong. This way, rather than having a single error code, a process invoking sys_spawn can know exactly what went wrong when the method fails.
+
+In part 4, we originally implemented sleeping locks from spinlocks, condition variables, and bounded buffers. Then, in combination, we used these objects to build an accurate sys_produce and sys_consume implementation. After some issues arose, we transitioned from using sleeping locks (locks that put the current thread's TCB state to TSTATE_SLEEP) to spinlocks.
+
+To show that our implementation works correctly, I added a printf-statement at the end of ping.c and pong.c, and modified init.c to run ping once and pong twice. That way, all of the integers added to the buffer are eventually consumed. To verify that the implementation works, two things must hold. First, a method cannot consume an integer that hasn't been produced yet (or has already been consumed). Second, all three processes must eventually finish, and ping must finish before the last pong process (since pong cannot finish consuming until ping has finished producing). Running mcertikos confirms via debug statements that these both hold.
+
+This also verifies that the system does not deadlock, since all of the processes eventually finish.
