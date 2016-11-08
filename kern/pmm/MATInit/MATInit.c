@@ -28,6 +28,8 @@ pmem_init(unsigned int mbi_addr)
   //The parameter mbi_addr shell not be used in the further code.
 	devinit(mbi_addr);
 
+	mem_spinlock_init();
+
   /**
    * Calculate the number of actual number of avaiable physical pages and store it into the local varaible nps.
    * Hint: Think of it as the highest address possible in the ranges of the memory map table,
