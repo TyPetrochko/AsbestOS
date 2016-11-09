@@ -38,7 +38,7 @@ unsigned int thread_spawn(void *entry, unsigned int id, unsigned int quota)
 
   pid = kctx_new(entry, id, quota);
   tcb_set_state(pid, TSTATE_READY);
-  tqueue_enqueue(NUM_IDS, pid);
+  tqueue_enqueue(NUM_IDS + get_pcpu_idx(), pid);
 	
   spinlock_release(&sched_lk);
   
@@ -63,7 +63,7 @@ void thread_yield(void)
 
   old_cur_pid = get_curid();
   tcb_set_state(old_cur_pid, TSTATE_READY);
-  tqueue_enqueue(NUM_IDS, old_cur_pid);
+  tqueue_enqueue(NUM_IDS + get_pcpu_idx(), old_cur_pid);
 
   new_cur_pid = tqueue_dequeue(NUM_IDS);
   tcb_set_state(new_cur_pid, TSTATE_RUN);
