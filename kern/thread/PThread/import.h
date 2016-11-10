@@ -7,6 +7,7 @@ unsigned int kctx_new(void *entry, unsigned int id, unsigned int quota);
 void kctx_switch(unsigned int from_pid, unsigned int to_pid);
 
 void tcb_set_state(unsigned int pid, unsigned int state);
+void tcb_set_cpu(unsigned int pid, unsigned int cpu);
 
 void tqueue_init(unsigned int mbi_addr);
 void tqueue_enqueue(unsigned int chid, unsigned int pid);
