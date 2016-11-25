@@ -38,7 +38,21 @@ static char*
 skipelem(char *path, char *name)
 {
   //TODO 
-  return 0;
+  int start, end, length;
+  if (path == 0) {
+    return 0;
+  }
+  start = 0;
+  while (path[start] =='/') start++;
+  if (path[start] == '\0') return 0;
+  end = start;
+  while (path[end] != '\0' && path[end] != '/') end++;
+  length = end - start;
+  if (length >= DIRSIZ) length = DIRSIZ - 1;
+  strncpy(name, start, length);
+  name[length] = '\0';
+  while (path[end] == '/') end++;
+  return path + end;
 }
 
 /**
@@ -51,6 +65,8 @@ static struct inode*
 namex(char *path, bool nameiparent, char *name)
 {
   struct inode *ip;
+  struct inode *next;
+  uint32_t *off;
 
   // If path is a full path, get the pointer to the root inode. Otherwise get
   // the inode corresponding to the current working directory.
@@ -63,6 +79,23 @@ namex(char *path, bool nameiparent, char *name)
 
   while((path = skipelem(path, name)) != 0){
     //TODO
+    inode_lock(ip);
+    if (ip->type != T_DIR) {
+      inode_unlockput(ip);
+      return 0;
+    } else if (nameiparent && path[0] == '\0') {
+      inode_unlock(ip);
+      return ip;
+    }
+
+    next = dir_lookup(ip, name, off);
+    if (next == 0) {
+      inode_unlockput(ip);
+      return 0;
+    } else {
+      inode_unlockput(ip);
+      ip = next;
+    }
   }
   if(nameiparent){
     inode_put(ip);
