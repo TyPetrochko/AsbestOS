@@ -27,7 +27,6 @@ dir_lookup(struct inode *dp, char *name, uint32_t *poff)
   if(dp->type != T_DIR)
     KERN_PANIC("dir_lookup not DIR");
 
-  //TODO
   for (off = 0; off < dp->size; dp += dir_entry_size) {
     read_value = inode_read(dp, (char *) &de, off, dir_entry_size);
     if (read_value != dir_entry_size) {

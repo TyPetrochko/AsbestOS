@@ -37,7 +37,6 @@
 static char*
 skipelem(char *path, char *name)
 {
-  //TODO 
   int start, end, length;
   if (path == 0) {
     return 0;
@@ -78,7 +77,6 @@ namex(char *path, bool nameiparent, char *name)
   }
 
   while((path = skipelem(path, name)) != 0){
-    //TODO
     inode_lock(ip);
     if (ip->type != T_DIR) {
       inode_unlockput(ip);

@@ -122,6 +122,8 @@ void thread_sleep (void *chan, spinlock_t *lk)
 
   // Context switch.
   new_pid = tqueue_dequeue(NUM_IDS);
+  if(new_pid = NUM_IDS)
+    KERN_PANIC("sleep without another thread to switch to");
   set_curid(new_pid);
   tcb_set_state(new_pid, TSTATE_RUN);
 
