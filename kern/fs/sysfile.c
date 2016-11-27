@@ -15,6 +15,8 @@
 #include "file.h"
 #include "fcntl.h"
 
+#define MAX_BUF 10000
+
 /**
  * This function is not a system call handler, but an auxiliary function
  * used by sys_open.
@@ -26,7 +28,18 @@
 static int
 fdalloc(struct file *f)
 {
-  //TODO
+  int pid, i;
+  struct file **open_files;
+
+  pid = get_curid();
+  open_files = tcb_get_openfiles(pid);
+
+  for(i = 0; i < NOFILE; i++){
+    if(!open_files[i]){ // a "free" file descriptor is represented by a null pointer
+      open_files[i] = f;
+      return i;
+    }
+  }
   return -1;
 }
 
@@ -42,7 +55,36 @@ fdalloc(struct file *f)
  */
 void sys_read(tf_t *tf)
 {
-  //TODO
+  int fd;
+  unsigned int u_buff;
+  size_t n;
+  char *k_buff;
+  struct file *f;
+
+  // get args
+  fd = syscall_get_arg2(tf);
+  u_buff = syscall_get_arg3(tf);
+  n = syscall_get_arg4(tf);
+
+  // basic error check
+  if(fd < 0 || fd >= NOFILE || !u_buff || n < 0 || n > MAX_BUF)
+    goto bad;
+  else if (!(VM_USERLO <= u_buff && u_buff + n <= VM_USERHI))
+    goto bad;
+
+  // disk --> kernel memory
+  f = tcb_get_openfiles(get_curid())[fd];
+  if(file_read(f, k_buff, n) < n)
+    goto bad;
+
+  // kernel memory --> user memory
+  if (pt_copyout(k_buff, get_curid(), u_buff, n) < n)
+    goto bad;
+
+  return;
+bad:
+  syscall_set_errno(tf, E_BADF);
+  return -1;
 }
 
 /**
