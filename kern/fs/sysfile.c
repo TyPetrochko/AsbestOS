@@ -144,7 +144,29 @@ bad:
  */
 void sys_close(tf_t *tf)
 {
-  //TODO
+  struct file *f;
+	int fd;
+	unsigned int pid;
+	pid = get_curid();
+
+	fd = syscall_get_arg2(tf);
+	if (fd < 0 || fd >= NOFILE) 
+		goto bad;
+
+  f = tcb_get_openfiles(pid)[fd];
+	if (f == 0)
+		goto bad;
+
+  file_close(f);
+	tcb_set_openfiles(pid, fd, 0);
+	syscall_set_errno(tf, E_SUCC);
+	syscall_set_retval1(tf, 0);
+	return;
+
+bad:
+	syscall_set_errno(tf, E_BADF);
+	syscall_set_retval1(tf, -1);
+	return;
 }
 
 /**
