@@ -57,8 +57,8 @@ void sys_read(tf_t *tf)
 {
   int fd;
   unsigned int u_buff;
-  size_t n;
-  char *k_buff;
+  size_t n, read; // bytes to read; bytes read
+  char k_buff[MAX_BUF];
   struct file *f;
 
   // get args
@@ -78,10 +78,10 @@ void sys_read(tf_t *tf)
     goto bad;
 
   // kernel memory --> user memory
-  if (pt_copyout(k_buff, get_curid(), u_buff, n) < n)
+  if ((read = pt_copyout(k_buff, get_curid(), u_buff, n)) > n)
     goto bad;
 
-  return;
+  return read;
 bad:
   syscall_set_errno(tf, E_BADF);
   return -1;
@@ -98,7 +98,36 @@ bad:
  */
 void sys_write(tf_t *tf)
 {
-  //TODO
+  int fd;
+  unsigned int u_buff;
+  size_t n, written; // bytes to write; bytes written
+  char k_buff[MAX_BUF];
+  struct file *f;
+
+  // get args
+  fd = syscall_get_arg2(tf);
+  u_buff = syscall_get_arg3(tf);
+  n = syscall_get_arg4(tf);
+
+  // basic error check
+  if(fd < 0 || fd >= NOFILE || !u_buff || n < 0 || n > MAX_BUF)
+    goto bad;
+  else if (!(VM_USERLO <= u_buff && u_buff + n <= VM_USERHI))
+    goto bad;
+
+  // user memory --> kernel memory
+  if(pt_copyin(get_curid(), u_buff, k_buff, n) < n)
+    goto bad;
+
+  // kernel memory --> disk
+  f = tcb_get_openfiles(get_curid())[fd];
+  if((written = file_write(f, k_buff, n)) > n)
+    goto bad;
+
+  return written;
+bad:
+  syscall_set_errno(tf, E_BADF);
+  return -1;
 }
 
 
