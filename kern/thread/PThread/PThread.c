@@ -121,8 +121,8 @@ void thread_sleep (void *chan, spinlock_t *lk)
   tcb_set_chan(pid, chan);
 
   // Context switch.
-  new_pid = tqueue_dequeue(NUM_IDS);
-  if(new_pid = NUM_IDS)
+  new_pid = tqueue_dequeue(NUM_IDS + get_pcpu_idx());
+  if(new_pid == NUM_IDS)
     KERN_PANIC("sleep without another thread to switch to");
   set_curid(new_pid);
   tcb_set_state(new_pid, TSTATE_RUN);
@@ -155,10 +155,9 @@ void thread_wakeup (void *chan)
     if (state == TSTATE_SLEEP && current_chan == chan) {
       tcb_set_state(i, TSTATE_READY);
       tcb_set_chan(i, 0);
-      tqueue_enqueue(i, NUM_IDS);
+      tqueue_enqueue(NUM_IDS + tcb_get_cpu(i), i);
     }
   }
 
   spinlock_release(&sched_lk);
-
 }

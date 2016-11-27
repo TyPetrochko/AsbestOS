@@ -160,7 +160,7 @@ sys_link(char *old, char* new)
 		       "b" (old),
 		       "c" (new),
            "d" (old_len),
-           "e" (new_len)
+           "S" (new_len)
 		     : "cc", "memory");
 
 	return errno ? -1 : 0;
@@ -239,7 +239,7 @@ sys_chdir(char *path)
 		     : "i" (T_SYSCALL),
 		       "a" (SYS_chdir),
 		       "b" (path),
-           "c" (len);
+           "c" (len)
 		     : "cc", "memory");
 
 	return errno ? -1 : 0;

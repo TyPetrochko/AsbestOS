@@ -83,11 +83,19 @@ void sys_fstat(tf_t *tf)
  */
 void sys_link(tf_t *tf)
 {
+  int old_len, new_len;
   char name[DIRSIZ], new[128], old[128];
   struct inode *dp, *ip;
 
-  pt_copyin(get_curid(), syscall_get_arg2(tf), old, 128);
-  pt_copyin(get_curid(), syscall_get_arg3(tf), new, 128);
+  old_len = syscall_get_arg4(tf);
+  new_len = syscall_get_arg5(tf);
+
+  // +1 for terminating null char
+  if(old_len + 1 > 128 || new_len + 1 > 128)
+    KERN_PANIC("sys_link length greater than 128 chars");
+  
+  pt_copyin(get_curid(), syscall_get_arg2(tf), old, old_len + 1);
+  pt_copyin(get_curid(), syscall_get_arg3(tf), new, new_len + 1);
 
   if((ip = namei(old)) == 0){
     syscall_set_errno(tf, E_NEXIST);
@@ -158,8 +166,13 @@ void sys_unlink(tf_t *tf)
   struct dirent de;
   char name[DIRSIZ], path[128];
   uint32_t off;
+  int len;
 
-  pt_copyin(get_curid(), syscall_get_arg2(tf), path, 128);
+  len = syscall_get_arg3(tf);
+  if(len + 1 > 128)
+    KERN_PANIC("sys_unlink path length too long");
+
+  pt_copyin(get_curid(), syscall_get_arg2(tf), path, len + 1);
 
   if((dp = nameiparent(path, name)) == 0){
     syscall_set_errno(tf, E_DISK_OP);
@@ -260,7 +273,7 @@ create(char *path, short type, short major, short minor)
 void sys_open(tf_t *tf)
 {
   char path[128];
-  int fd, omode;
+  int fd, omode, len;
   struct file *f;
   struct inode *ip;
 
@@ -270,7 +283,11 @@ void sys_open(tf_t *tf)
     log_init();
   }
 
-  pt_copyin(get_curid(), syscall_get_arg2(tf), path, 128);
+  len = syscall_get_arg4(tf);
+  if(len + 1 > 128)
+    KERN_PANIC("sys_open length greater than 128 chars [%d]", len + 1);
+  
+  pt_copyin(get_curid(), syscall_get_arg2(tf), path, len + 1);
   omode = syscall_get_arg3(tf);
 
   if (!path)
@@ -323,8 +340,13 @@ void sys_mkdir(tf_t *tf)
 {
   char path[128];
   struct inode *ip;
+  int len;
 
-  pt_copyin(get_curid(), syscall_get_arg2(tf), path, 128);
+  len = syscall_get_arg3(tf);
+  if(len + 1 > 128)
+    KERN_PANIC("sys_mkdir path length greater than 128");
+
+  pt_copyin(get_curid(), syscall_get_arg2(tf), path, len + 1);
 
   begin_trans();
   if((ip = (struct inode*)create(path, T_DIR, 0, 0)) == 0){
@@ -341,9 +363,15 @@ void sys_chdir(tf_t *tf)
 {
   char path[128];
   struct inode *ip;
-  int pid = get_curid();
+  int pid, len;
 
-  pt_copyin(get_curid(), syscall_get_arg2(tf), path, 128);
+  len = syscall_get_arg3(tf);
+  pid = get_curid();
+
+  if(len + 1 > 128)
+    KERN_PANIC("sys_chdir path length greater than 128");
+
+  pt_copyin(get_curid(), syscall_get_arg2(tf), path, len + 1);
 
   if((ip = namei(path)) == 0){
     syscall_set_errno(tf, E_DISK_OP);
