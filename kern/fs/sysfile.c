@@ -81,10 +81,14 @@ void sys_read(tf_t *tf)
   if ((read = pt_copyout(k_buff, get_curid(), u_buff, n)) > n)
     goto bad;
 
-  return read;
+	
+	syscall_set_errno(tf, E_SUCC);
+	syscall_set_retval1(tf, read);
+  return;
 bad:
   syscall_set_errno(tf, E_BADF);
-  return -1;
+	syscall_set_retval1(tf, -1);
+  return ;
 }
 
 /**
@@ -124,10 +128,13 @@ void sys_write(tf_t *tf)
   if((written = file_write(f, k_buff, n)) > n)
     goto bad;
 
-  return written;
+	syscall_set_errno(tf, E_SUCC);
+	syscall_set_retval1(tf, written);
+  return ;
 bad:
   syscall_set_errno(tf, E_BADF);
-  return -1;
+	syscall_set_retval1(tf, -1);
+  return ;
 }
 
 
