@@ -175,7 +175,37 @@ bad:
  */
 void sys_fstat(tf_t *tf)
 {
-  //TODO
+  struct file *f;
+	int fd;
+	struct stat *user;
+	struct stat kern;
+	unsigned int pid;
+	int stat_size = sizeof(struct file_stat);
+
+	fd = syscall_get_arg2(tf);
+	if (fd < 0 || fd >= NOFILE)
+		goto bad;
+
+	user = syscall_get_arg3(tf);
+	if ((unsigned int) user < VM_USERLO || (unsigned int) user > VM_USERHI - stat_size)
+		goto bad;
+
+	f = tcb_get_openfiles(pid)[fd];
+	if (f == 0)
+		goto bad;
+
+	pt_copyin(pid, user, &kern, stat_size);
+	if (file_stat(f, &kern) != 0)
+		goto bad;
+
+	syscall_set_errno(tf, E_SUCC);
+	syscall_set_retval1(tf, 0);
+	return;
+
+bad:
+  syscall_set_errno(tf, E_BADF);
+	syscall_set_retval1(tf, -1);
+	return;
 }
 
 /**
