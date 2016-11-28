@@ -8,6 +8,7 @@
 void cons_init(void);
 void cons_enable_kbd(void);
 void cons_putc(char);
+char cons_getc(void);
 void cons_intr(int (*proc)(void));
 
 #endif /* _KERN_ */

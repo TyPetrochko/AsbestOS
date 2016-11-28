@@ -4,6 +4,7 @@
 #include <lib/trap.h>
 #include <lib/syscall.h>
 #include <dev/intr.h>
+#include <dev/console.h>
 #include <pcpu/PCPUIntro/export.h>
 
 #include "import.h"
@@ -51,6 +52,12 @@ void sys_puts(tf_t *tf)
     cur_pos += nbytes;
   }
 
+  syscall_set_errno(tf, E_SUCC);
+}
+
+void sys_getc(tf_t *tf){
+  char c = cons_getc();
+  syscall_set_retval1(tf, c);
   syscall_set_errno(tf, E_SUCC);
 }
 

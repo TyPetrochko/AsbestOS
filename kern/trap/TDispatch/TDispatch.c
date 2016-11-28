@@ -31,6 +31,9 @@ void syscall_dispatch(tf_t *tf)
      */
     sys_puts(tf);
     break;
+  case SYS_getc:
+    sys_getc(tf);
+    break;
   case SYS_spawn:
     /*
      * Create a new process.

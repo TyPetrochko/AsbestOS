@@ -22,6 +22,20 @@ sys_puts(const char *s, size_t len)
 		     : "cc", "memory");
 }
 
+static gcc_inline int
+sys_getc()
+{
+	int errno, c;
+	asm volatile("int %2" 
+		     : "=a" (errno),
+		       "=b" (c)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_getc)
+		     : "cc", "memory");
+
+  return c;
+}
+
 static gcc_inline pid_t
 sys_spawn(uintptr_t exec, unsigned int quota)
 {
