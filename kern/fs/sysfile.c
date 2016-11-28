@@ -177,8 +177,8 @@ void sys_fstat(tf_t *tf)
 {
   struct file *f;
 	int fd;
-	struct stat *user;
-	struct stat kern;
+	struct file_stat *user;
+	struct file_stat kern;
 	unsigned int pid;
 	int stat_size = sizeof(struct file_stat);
 
