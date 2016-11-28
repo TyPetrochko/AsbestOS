@@ -21,13 +21,14 @@ dir_lookup(struct inode *dp, char *name, uint32_t *poff)
 {
   uint32_t off, inum;
   struct dirent de;
+  struct inode * node;
   int read_value;
   int dir_entry_size = sizeof(de);
 
   if(dp->type != T_DIR)
     KERN_PANIC("dir_lookup not DIR");
 
-  for (off = 0; off < dp->size; dp += dir_entry_size) {
+  for (off = 0; off < dp->size; off += dir_entry_size) {
     read_value = inode_read(dp, (char *) &de, off, dir_entry_size);
     if (read_value != dir_entry_size) {
       KERN_PANIC("Bad inode_read in dir_lookup");
@@ -35,9 +36,10 @@ dir_lookup(struct inode *dp, char *name, uint32_t *poff)
       //not allocated
       continue;
     } else if (dir_namecmp(name, de.name) == 0) {
-      *poff = off;
+      if (off != 0) *poff = off;
       inum = de.inum;
-      return inode_get(dp->dev, inum);
+      node = inode_get(dp->dev, inum);
+      return node;
     }
   }
   return 0;
@@ -70,9 +72,13 @@ dir_link(struct inode *dp, char *name, uint32_t inum)
     }
   }
 
-  if (de.inum != 0) {
-    KERN_PANIC("No unallocated blocks in dir_link");
-  }
+  //unclear if this is incorrect
+
+  // if (de.inum != 0) {
+  //   KERN_PANIC("No unallocated blocks in dir_link");
+  // }
+
+
   //found block, copy in info
   de.inum = inum;
   strncpy(de.name, name, DIRSIZ);

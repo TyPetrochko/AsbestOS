@@ -39,8 +39,9 @@ fdalloc(struct file *f)
   open_files = tcb_get_openfiles(pid);
 
   for(i = 0; i < NOFILE; i++){
-    if(!open_files[i]){ // a "free" file descriptor is represented by a null pointer
-      tcb_set_openfiles(pid, i, f);
+    if(open_files[i] == 0){ // a "free" file descriptor is represented by a null pointer
+      //tcb_set_openfiles(pid, i, f);
+      open_files[i] = f;
       return i;
     }
   }
@@ -72,19 +73,25 @@ void sys_read(tf_t *tf)
   // basic error check
   if(fd < 0 || fd >= NOFILE || !u_buff || n < 0 || n > MAX_BUF)
     goto bad;
-  else if (!(VM_USERLO <= u_buff && u_buff + n <= VM_USERHI))
+  else if (VM_USERLO > u_buff || u_buff + n > VM_USERHI || n > sizeof(k_buff))
     goto bad;
 
 	spinlock_acquire(&k_buff_lock);
 
   // disk --> kernel memory
   f = tcb_get_openfiles(get_curid())[fd];
-  if(file_read(f, k_buff, n) < n)
+  if (f == 0)
     goto bad;
-
+  
+  read = file_read(f, k_buff, n);
+  if (read < 0)
+    goto bad;
+   
   // kernel memory --> user memory
-  if ((read = pt_copyout(k_buff, get_curid(), u_buff, n)) > n)
-    goto bad;
+  if (read > 0) {
+    if (pt_copyout(k_buff, get_curid(), u_buff, read) != read) 
+      goto bad;
+  } 
 
 	spinlock_release(&k_buff_lock);
 	syscall_set_errno(tf, E_SUCC);
@@ -527,4 +534,3 @@ void sys_chdir(tf_t *tf)
   tcb_set_cwd(pid, ip);
   syscall_set_errno(tf, E_SUCC);
 }
-

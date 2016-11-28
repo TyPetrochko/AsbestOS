@@ -134,6 +134,8 @@ void thread_sleep (void *chan, spinlock_t *lk)
   spinlock_acquire(&sched_lk);
   tcb_set_chan(pid, 0);
   // Reacquire original lock.
+
+  //Is this the correct order?
   spinlock_acquire(lk);
   spinlock_release(&sched_lk);
 }

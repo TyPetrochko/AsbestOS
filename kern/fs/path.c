@@ -42,13 +42,14 @@ skipelem(char *path, char *name)
     return 0;
   }
   start = 0;
+  if (path[start] == '\0') return 0;
   while (path[start] =='/') start++;
   if (path[start] == '\0') return 0;
   end = start;
   while (path[end] != '\0' && path[end] != '/') end++;
   length = end - start;
   if (length >= DIRSIZ) length = DIRSIZ - 1;
-  strncpy(name, start, length);
+  strncpy(name, path + start, length);
   name[length] = '\0';
   while (path[end] == '/') end++;
   return path + end;

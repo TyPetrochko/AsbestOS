@@ -106,8 +106,9 @@ file_read(struct file *f, char *addr, int n)
 {
   int r;
 
-  if(f->readable == 0)
+  if(f->readable == 0) {
     return -1;
+  }
   if(f->type == FD_INODE){
     inode_lock(f->ip);
     if((r = inode_read(f->ip, addr, f->off, n)) > 0)
