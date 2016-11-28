@@ -9,6 +9,7 @@
 #include <kern/lib/trap.h>
 #include <kern/lib/syscall.h>
 #include <kern/trap/TSyscallArg/export.h>
+#include <kern/lib/spinlock.h>
 
 #include "dir.h"
 #include "path.h"
@@ -16,6 +17,9 @@
 #include "fcntl.h"
 
 #define MAX_BUF 10000
+
+char k_buff[MAX_BUF];
+spinlock_t k_buff_lock; 
 
 /**
  * This function is not a system call handler, but an auxiliary function
@@ -36,7 +40,7 @@ fdalloc(struct file *f)
 
   for(i = 0; i < NOFILE; i++){
     if(!open_files[i]){ // a "free" file descriptor is represented by a null pointer
-      open_files[i] = f;
+      tcb_set_openfiles(pid, i, f);
       return i;
     }
   }
@@ -58,7 +62,6 @@ void sys_read(tf_t *tf)
   int fd;
   unsigned int u_buff;
   size_t n, read; // bytes to read; bytes read
-  char k_buff[MAX_BUF];
   struct file *f;
 
   // get args
@@ -72,6 +75,8 @@ void sys_read(tf_t *tf)
   else if (!(VM_USERLO <= u_buff && u_buff + n <= VM_USERHI))
     goto bad;
 
+	spinlock_acquire(&k_buff_lock);
+
   // disk --> kernel memory
   f = tcb_get_openfiles(get_curid())[fd];
   if(file_read(f, k_buff, n) < n)
@@ -81,11 +86,12 @@ void sys_read(tf_t *tf)
   if ((read = pt_copyout(k_buff, get_curid(), u_buff, n)) > n)
     goto bad;
 
-	
+	spinlock_release(&k_buff_lock);
 	syscall_set_errno(tf, E_SUCC);
 	syscall_set_retval1(tf, read);
   return;
 bad:
+	spinlock_release(&k_buff_lock);
   syscall_set_errno(tf, E_BADF);
 	syscall_set_retval1(tf, -1);
   return ;
@@ -105,7 +111,6 @@ void sys_write(tf_t *tf)
   int fd;
   unsigned int u_buff;
   size_t n, written; // bytes to write; bytes written
-  char k_buff[MAX_BUF];
   struct file *f;
 
   // get args
@@ -119,6 +124,8 @@ void sys_write(tf_t *tf)
   else if (!(VM_USERLO <= u_buff && u_buff + n <= VM_USERHI))
     goto bad;
 
+	spinlock_acquire(&k_buff_lock);
+
   // user memory --> kernel memory
   if(pt_copyin(get_curid(), u_buff, k_buff, n) < n)
     goto bad;
@@ -128,10 +135,12 @@ void sys_write(tf_t *tf)
   if((written = file_write(f, k_buff, n)) > n)
     goto bad;
 
+	spinlock_release(&k_buff_lock);
 	syscall_set_errno(tf, E_SUCC);
 	syscall_set_retval1(tf, written);
   return ;
 bad:
+	spinlock_release(&k_buff_lock);
   syscall_set_errno(tf, E_BADF);
 	syscall_set_retval1(tf, -1);
   return ;
