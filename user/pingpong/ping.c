@@ -129,6 +129,29 @@ void mk_dir(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
     printf("mkdir failed to make directory %s\n", arg_array[1]);
 }
 
+void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
+  int fd, read;
+  if(arg_count < 2)
+    printf("usage: cat <filename>");
+
+  if(fd = sys_open(arg_array[1], O_RDONLY) == -1)
+    printf("cat: could not open file %s\n", arg_array[1]);
+
+  // zero the buffer
+  buff[0] = '\0';
+  while((read = sys_read(fd, buff, BUFLEN - 1)) == BUFLEN - 1){
+    buff[read] = '\0';
+    printf("%s", buff);
+  }
+
+  // flush remaining bytes
+  buff[read] = '\0';
+  printf("%s\n", buff);
+
+  if(sys_close(fd) == -1)
+    printf("cat: couldn't close file %s\n", arg_array[1]);
+}
+
 int main (int argc, char **argv)
 {
     printf("shell started.\n");
@@ -167,6 +190,9 @@ int main (int argc, char **argv)
       }else if(!strcmp(arg_array[0], "pwd")){
         // PWD
         printf("%s\n", cwd);
+      }else if(!strcmp(arg_array[0], "cat")){
+        // MKDIR
+        cat(arg_array, arg_count, buff);
       }else{
         // TODO more here!
         printf("unrecognized command: %s\n", arg_array[0]);
