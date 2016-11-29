@@ -259,4 +259,22 @@ sys_chdir(char *path)
 	return errno ? -1 : 0;
 }
 
+static gcc_inline int
+sys_ls(char *buf, size_t n)
+{
+	int errno;
+	size_t ret;
+
+	asm volatile("int %2"
+		     : "=a" (errno),
+		       "=b" (ret)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_ls),
+		       "b" (buf),
+		       "c" (n)
+		     : "cc", "memory");
+
+	return errno ? -1 : ret;
+}
+
 #endif

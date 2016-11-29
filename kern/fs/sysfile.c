@@ -77,6 +77,9 @@ void sys_read(tf_t *tf)
     goto bad;
 
 	spinlock_acquire(&k_buff_lock);
+  
+  // "clear" buffer
+  k_buff[0] = '\0';
 
   // disk --> kernel memory
   f = tcb_get_openfiles(get_curid())[fd];
@@ -380,7 +383,6 @@ create(char *path, short type, short major, short minor)
   if((dp = nameiparent(path, name)) == 0)
     return 0;
   inode_lock(dp);
-
   if((ip = dir_lookup(dp, name, &off)) != 0){
     inode_unlockput(dp);
     inode_lock(ip);
@@ -389,7 +391,7 @@ create(char *path, short type, short major, short minor)
     inode_unlockput(ip);
     return 0;
   }
-
+  
   if((ip = inode_alloc(dp->dev, type)) == 0)
     KERN_PANIC("create: ialloc");
 
@@ -398,7 +400,6 @@ create(char *path, short type, short major, short minor)
   ip->minor = minor;
   ip->nlink = 1;
   inode_update(ip);
-
   if(type == T_DIR){  // Create . and .. entries.
     dp->nlink++;  // for ".."
     inode_update(dp);
@@ -407,7 +408,6 @@ create(char *path, short type, short major, short minor)
        || dir_link(ip, "..", dp->inum) < 0)
       KERN_PANIC("create dots");
   }
-
   if(dir_link(dp, name, ip->inum) < 0)
     KERN_PANIC("create: dir_link");
 
@@ -493,7 +493,6 @@ void sys_mkdir(tf_t *tf)
     KERN_PANIC("sys_mkdir path length greater than 128");
 
   pt_copyin(get_curid(), syscall_get_arg2(tf), path, len + 1);
-
   begin_trans();
   if((ip = (struct inode*)create(path, T_DIR, 0, 0)) == 0){
     commit_trans();
@@ -534,3 +533,70 @@ void sys_chdir(tf_t *tf)
   tcb_set_cwd(pid, ip);
   syscall_set_errno(tf, E_SUCC);
 }
+
+void sys_ls(tf_t *tf){
+  unsigned int u_buff;
+  size_t n, written; // bytes to read; bytes read
+  struct inode *cwd;
+
+  // get args/init
+  u_buff = syscall_get_arg2(tf);
+  n = syscall_get_arg3(tf);
+  cwd = tcb_get_cwd(get_curid());
+  written = 0;
+
+  // basic error check
+  if(!u_buff || n < 0 || n > MAX_BUF)
+    goto bad;
+  else if (VM_USERLO > u_buff || u_buff + n > VM_USERHI || n > sizeof(k_buff))
+    goto bad;
+
+	spinlock_acquire(&k_buff_lock);
+
+  // "clear" buffer
+  k_buff[0] = '\0';
+
+  // disk --> kernel memory
+  struct dirent de;
+  int r, off;
+  for (off = 0; off < cwd->size; off += sizeof(de)) {
+    r = inode_read(cwd, (char *) &de, off, sizeof(de));
+    if (r != sizeof(de)) {
+      KERN_PANIC("Bad inode_read in dir_link");
+    }
+    if(!strcmp(de.name, ".") || !strcmp(de.name, ".."))
+      continue;
+    if (de.inum == 0 || strnlen(de.name, MAX_BUF) + written >= MAX_BUF) {
+      break;
+    }
+    // copy in a space
+    if(written > 0){
+      k_buff[written] = ' ';
+      written ++;
+    }
+    // copy into ls buffer
+    strncpy(k_buff + written, de.name, MAX_BUF);
+    written += strnlen(de.name, MAX_BUF);
+  }
+
+  // null terminate buffer
+  k_buff[written + 1] = '\0';
+  written++;
+
+  // kernel memory --> user memory
+  if (written > 0) {
+    if (pt_copyout(k_buff, get_curid(), u_buff, written) != written) 
+      goto bad;
+  } 
+
+	spinlock_release(&k_buff_lock);
+	syscall_set_errno(tf, E_SUCC);
+	syscall_set_retval1(tf, written);
+  return;
+bad:
+	spinlock_release(&k_buff_lock);
+  syscall_set_errno(tf, E_BADF);
+	syscall_set_retval1(tf, -1);
+  return ;
+}
+

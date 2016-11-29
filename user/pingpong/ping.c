@@ -81,21 +81,48 @@ void parse_args(int *argc, char argv[MAXARGS][BUFLEN]) {
 int main (int argc, char **argv)
 {
     printf("shell started.\n");
-    char arg_array[MAXARGS][BUFLEN];
-    int arg_count;
+    char arg_array[MAXARGS][BUFLEN], buff[BUFLEN];
+    int arg_count, fd, read;
+
+    // Try to read from current directory
+    //  1) Sanity check
+    //  2) sys_open initializes the disk log (if we omit this, mkdir fails)
+    fd = sys_open(".", O_RDONLY);
+    if(fd == -1)
+      printf("ls failed to open cwd\n");
+    if(sys_close(fd) == -1)
+      printf("ls failed to close cwd\n");
 
     while(1){
       readline("$ ");
       parse_args(&arg_count, arg_array);
-      printf("You said: %s\n", linebuf);
 
-      int i;
-      for (i = 0; i < arg_count; i++) {
-        printf("Argument %d: %s\n", i, arg_array[i]);
+      if(!strcmp(arg_array[0], "ls")){
+        // LS
+        sys_ls(buff, BUFLEN);
+        printf("%s\n", buff);
+      }else if(!strcmp(arg_array[0], "cd")){
+        // CD
+        if(arg_count < 2 || sys_chdir(arg_array[1]) == -1)
+          printf("cd to directory %s failed\n", arg_array[1]);
+      }else if(!strcmp(arg_array[0], "touch")){
+        // TOUCH
+        if(arg_count < 2)
+          printf("usage: touch <filename>\n");
+        else if((fd = sys_open(arg_array[1], O_CREATE)) == -1)
+          printf("touch could not create file %s\n", arg_array[1]);
+        else if(sys_close(fd) == -1)
+          printf("touch couldn't close file %s\n");
+      }else if(!strcmp(arg_array[0], "mkdir")){
+        // MKDIR
+        if(arg_count < 2)
+          printf("usage: mkdir <dirname>\n");
+        else if(sys_mkdir(arg_array[1]) == -1)
+          printf("mkdir failed to make directory %s\n", arg_array[1]);
+      }else{
+        // TODO more here!
+        printf("unrecognized command: %s\n", arg_array[0]);
       }
-      printf("\n");
-
-      //TODO: switch/case on possible commands for argv[0]
     }
     return 0;
 }

@@ -111,6 +111,7 @@ file_read(struct file *f, char *addr, int n)
   }
   if(f->type == FD_INODE){
     inode_lock(f->ip);
+    KERN_DEBUG("Here!\n");
     if((r = inode_read(f->ip, addr, f->off, n)) > 0)
       f->off += r;
     inode_unlock(f->ip);
