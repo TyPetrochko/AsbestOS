@@ -152,6 +152,16 @@ void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
     printf("cat: couldn't close file %s\n", arg_array[1]);
 }
 
+void echo(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
+  int i;
+  for(i = 1; i < arg_count; i++){
+    printf("%s", arg_array[i]);
+    if(i + 1 != arg_count)
+      printf(" ");
+  }
+  printf("\n");
+}
+
 int main (int argc, char **argv)
 {
     printf("shell started.\n");
@@ -193,6 +203,9 @@ int main (int argc, char **argv)
       }else if(!strcmp(arg_array[0], "cat")){
         // MKDIR
         cat(arg_array, arg_count, buff);
+      }else if(!strcmp(arg_array[0], "echo")){
+        // MKDIR
+        echo(arg_array, arg_count, buff);
       }else{
         // TODO more here!
         printf("unrecognized command: %s\n", arg_array[0]);
