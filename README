@@ -3,3 +3,55 @@ List here the following info:
 2. whether you coded this assignment together, and if not, who worked on which part;
 3. brief description of what you have implemented;
 4. and anything else you would like us to know.
+
+
+Alex Ringlen and Tyler Petrochko completed this lab as partners.
+
+
+Alex coded parts 1-12, 15, and parts of 17. Tyler coded parts 13, 14, 16, and parts of 17. Of the features listed in step 17, Alex wrote code to support "cp", "mv", "rm", "rm -r", ">", and ">>", while Tyler wrote code to support "ls", "pwd", "cd", "mkdir", "cat", "touch", and "cp -r".
+
+In part 13, we implemented additional functionality in user/include/syscall.h and kern/lib/sysfile.c to add length parameters to system calls that involve passing a string to the kernel. In parts 16 and 17, we re-used the "ping" process from earlier in the semester to make a shell process, and implemented the sys_getc() system call.
+
+In part 17, we introduced two new system calls, sys_ls() and sys_getc(). We used sys_getc() to get user input from the keyboard, and sys_ls() to fill a buffer with files contained within a given directory. The remaining shell functionality was built on top of existing system calls.
+
+To implement ls, we simply use the sys_ls() system call on the current working directory, i.e. "." and print out the resulting files. For pwd, we keep track of the current directory path in a special buffer, and print the buffer to the console when the shell command "pwd" is entered. The "cd" command invokes the sys_chdir() system call, and updates the current directory buffer.
+
+The "cat" command is fairly straightfoward; it opens a file with sys_open(), reads the contents with sys_read() into a user buffer, then outputs the result to the console. We also implemented an additional shell command, "echo", which re-prints user input to the console. Touch is also fairly simple; it invokes sys_open() with the O_CREATE flag set, which results in a newly-made file.
+
+The recursive option for "cp" is arguably the most complex operation; it involves recursively building path buffers as it traverses the directory trees of the source and destination argument, copying and files over appropriately. It makes heavy use of the sys_ls() system call, and parses the result.
+
+Example shell dialogue:
+
+      shell started.
+      shell in process 1
+      $ ls
+      README
+      $ mkdir a
+      $ mkdir b
+      $ cp README a/README2
+      $ potato > a/file1
+      $ tomato > a/file2
+      $ touch a/file3
+      $ cp -r a b
+      $ ls a
+      README2 file1 file2 file3
+      $ ls b
+      a
+      $ ls b/a
+      README2 file1 file2 file3
+      $ cat b/a/file1
+      potato
+      $ cd b/a
+      $ ls
+      README2 file1 file2 file3
+      $ pwd
+      /b/a
+      $ cd /
+      $ echo hello world!
+      hello world!
+      $ rm README
+      $ ls
+      a b
+      $ es >> a/file1
+      $ cat a/file1
+      potatoes
