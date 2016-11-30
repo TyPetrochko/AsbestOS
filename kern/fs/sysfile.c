@@ -40,8 +40,8 @@ fdalloc(struct file *f)
 
   for(i = 0; i < NOFILE; i++){
     if(open_files[i] == 0){ // a "free" file descriptor is represented by a null pointer
-      //tcb_set_openfiles(pid, i, f);
-      open_files[i] = f;
+      tcb_set_openfiles(pid, i, f);
+      //open_files[i] = f;
       return i;
     }
   }

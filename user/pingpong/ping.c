@@ -152,39 +152,54 @@ void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
     printf("cat: couldn't close file %s\n", arg_array[1]);
 }
 
+void rm(char arg_array[MAXARGS][BUFLEN], int arg_count) {
+  if (arg_count < 2) {
+    printf("usage: rm <filename>\n");
+  } else if (sys_unlink(arg_array[1]) == -1){
+    printf("error removing file");
+  }
+}
+
 void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
   int src, dest, read;
-  if(arg_count < 3)
+  if(arg_count < 3) {
     printf("usage: cp <src> <dest>");
+    return;
+  }    
 
-  if(src = sys_open(arg_array[1], O_RDONLY) == -1)
+  if((src = sys_open(arg_array[1], O_RDONLY)) == -1)
     printf("cp: could not open file %s\n", arg_array[1]);
-
-  if(dest = sys_open(arg_array[2], O_RDWR) == -1)
+  else if((dest = sys_open(arg_array[2], O_CREATE )) == -1)
     printf("cp: could not open file %s\n", arg_array[2]);
-
-  // zero the buffer
-  buff[0] = '\0';
-  while((read = sys_read(src, buff, BUFLEN - 1)) == BUFLEN - 1){
-    buff[read] = '\0';
-    if (sys_write(dest, buff, read) == -1) {
-      printf("Write failed\n");
-    }
-  }
-
-  // flush remaining bytes
-  buff[read] = '\0';
-  printf("read: %d", read);
-  if (read > 0) {
-    if (sys_write(dest, buff, read - 1) == -1) {
-      printf("Final write failed\n");
-    }
-  }
-
-  if(sys_close(src) == -1)
-    printf("cp: couldn't close file %s\n", arg_array[1]);
-  if(sys_close(dest) == -1)
+  else if(sys_close(dest) == -1)
     printf("cp: couldn't close file %s\n", arg_array[2]);
+  else if((dest = sys_open(arg_array[2], O_WRONLY )) == -1)
+    printf("cp: could not open file %s\n", arg_array[2]);
+  else {
+
+    // zero the buffer
+    buff[0] = '\0';
+    while((read = sys_read(src, buff, BUFLEN - 1)) == BUFLEN - 1){
+      buff[read] = '\0';
+      if (sys_write(dest, buff, read) == -1) {
+        printf("Write failed\n");
+      }
+    }
+
+    // flush remaining bytes
+    buff[read] = '\0';
+    if (read > 0) {
+      if (sys_write(dest, buff, read) == -1) {
+        printf("Final write failed\n");
+      }
+    }
+
+    if(sys_close(src) == -1)
+      printf("cp: couldn't close file %s\n", arg_array[1]);
+   
+    if(sys_close(dest) == -1)
+      printf("cp: couldn't close file %s\n", arg_array[2]);
+  }
 }
 
 void echo(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
@@ -244,6 +259,9 @@ int main (int argc, char **argv)
       }else if(!strcmp(arg_array[0], "cp")){
         // CP
         cp(arg_array, arg_count, buff);
+      }else if(!strcmp(arg_array[0], "rm")){
+        // CP
+        rm(arg_array, arg_count);
       }else if(!strcmp(arg_array[0], "cd")){
         // CD
         cd(arg_array, arg_count, buff, cwd);
