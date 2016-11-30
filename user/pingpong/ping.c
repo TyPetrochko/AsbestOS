@@ -245,6 +245,27 @@ void append_string(char *string, char *path, char* buff) {
     }
 }
 
+int get_filetype(char *path){
+  int fd, ret;
+  struct file_stat st;
+
+  if((fd = sys_open(path, O_RDONLY)) == -1)
+    printf("is_dir: couldn't open file %s\n", path);
+
+  if(sys_fstat(fd, &st) == -1)
+    printf("is_dir: couldn't fstat file %s\n", path);
+
+  if(st.type != T_DIR && st.type != T_FILE && st.type != T_DEV)
+    printf("ls_dir: file %s has corrupted type\n", path);
+
+  ret = st.type;
+
+  if(sys_close(fd) == -1)
+    printf("ls_dir: couldn't close file %s\n" path);
+
+  return ret;
+}
+
 int main (int argc, char **argv)
 {
     printf("shell started.\n");
