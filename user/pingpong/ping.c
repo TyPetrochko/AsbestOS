@@ -7,8 +7,16 @@
 
 #define BUFLEN 1024
 #define MAXARGS 10
+
+/* these aren't included for some reason */
+#define T_DIR  1   // Directory
+#define T_FILE 2   // File
+#define T_DEV  3   // Device
+
 static char linebuf[BUFLEN];
 int buffer_index;
+
+int get_filetype(char *path);
 
 char *
 readline(const char *prompt)
@@ -155,8 +163,10 @@ void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
 void rm(char arg_array[MAXARGS][BUFLEN], int arg_count) {
   if (arg_count < 2) {
     printf("usage: rm <filename>\n");
+  } else if (get_filetype(arg_array[1]) != T_FILE){
+    printf("rm: %s is not a file\n", arg_array[1]);
   } else if (sys_unlink(arg_array[1]) == -1){
-    printf("error removing file");
+    printf("rm: error unlinking file %s\n", arg_array[1]);
   }
 }
 
@@ -249,19 +259,23 @@ int get_filetype(char *path){
   int fd, ret;
   struct file_stat st;
 
-  if((fd = sys_open(path, O_RDONLY)) == -1)
+  if((fd = sys_open(path, O_RDONLY)) == -1){
     printf("is_dir: couldn't open file %s\n", path);
+    return -1;
+  }
 
-  if(sys_fstat(fd, &st) == -1)
+  if(sys_fstat(fd, &st) == -1){
     printf("is_dir: couldn't fstat file %s\n", path);
+    return -1;
+  }
 
   if(st.type != T_DIR && st.type != T_FILE && st.type != T_DEV)
-    printf("ls_dir: file %s has corrupted type\n", path);
+    printf("ls_dir: file %s has corrupted type: %d\n", path, st.type);
 
   ret = st.type;
 
   if(sys_close(fd) == -1)
-    printf("ls_dir: couldn't close file %s\n" path);
+    printf("ls_dir: couldn't close file %s\n", path);
 
   return ret;
 }
