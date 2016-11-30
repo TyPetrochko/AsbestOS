@@ -122,7 +122,7 @@ void touch(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
 }
 
 void mk_dir(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
-  printf("%s %s\n", arg_array[0], arg_array[1]);
+  //printf("%s %s\n", arg_array[0], arg_array[1]);
   if(arg_count < 2)
     printf("usage: mkdir <dirname>\n");
   else if(sys_mkdir(arg_array[1]) == -1)

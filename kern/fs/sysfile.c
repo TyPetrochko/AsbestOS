@@ -567,14 +567,14 @@ void sys_ls(tf_t *tf){
     if(!strcmp(de.name, ".") || !strcmp(de.name, ".."))
       continue;
     if (de.inum == 0 || strnlen(de.name, MAX_BUF) + written >= MAX_BUF) {
-      break;
+      continue;
     }
     // copy in a space
     if(written > 0){
       k_buff[written] = ' ';
       written ++;
     }
-    KERN_DEBUG("name: %s\n", de.name);
+    //KERN_DEBUG("name: %s\n", de.name);
     // copy into ls buffer
     strncpy(k_buff + written, de.name, MAX_BUF);
     written += strnlen(de.name, MAX_BUF);
