@@ -130,6 +130,7 @@ file_write(struct file *f, char *addr, int n)
 
   if(f->writable == 0)
     return -1;
+  KERN_DEBUG("writable\n");
   if(f->type == FD_INODE){
     // Write a few blocks at a time to avoid exceeding
     // the maximum log transaction size, including

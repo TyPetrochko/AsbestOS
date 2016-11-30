@@ -152,6 +152,41 @@ void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
     printf("cat: couldn't close file %s\n", arg_array[1]);
 }
 
+void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
+  int src, dest, read;
+  if(arg_count < 3)
+    printf("usage: cp <src> <dest>");
+
+  if(src = sys_open(arg_array[1], O_RDONLY) == -1)
+    printf("cp: could not open file %s\n", arg_array[1]);
+
+  if(dest = sys_open(arg_array[2], O_RDWR) == -1)
+    printf("cp: could not open file %s\n", arg_array[2]);
+
+  // zero the buffer
+  buff[0] = '\0';
+  while((read = sys_read(src, buff, BUFLEN - 1)) == BUFLEN - 1){
+    buff[read] = '\0';
+    if (sys_write(dest, buff, read) == -1) {
+      printf("Write failed\n");
+    }
+  }
+
+  // flush remaining bytes
+  buff[read] = '\0';
+  printf("read: %d", read);
+  if (read > 0) {
+    if (sys_write(dest, buff, read - 1) == -1) {
+      printf("Final write failed\n");
+    }
+  }
+
+  if(sys_close(src) == -1)
+    printf("cp: couldn't close file %s\n", arg_array[1]);
+  if(sys_close(dest) == -1)
+    printf("cp: couldn't close file %s\n", arg_array[2]);
+}
+
 void echo(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
   int i;
   for(i = 1; i < arg_count; i++){
@@ -160,6 +195,17 @@ void echo(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
       printf(" ");
   }
   printf("\n");
+}
+
+void write_string(char * string, char * path) {
+  int fd;
+  if((fd = sys_open(path, O_CREATE + O_WRONLY)) == -1)
+    printf("> could not create file %s\n", path);
+  else if (sys_write(fd, string, strlen(string)) == -1)
+    printf("> failed to write\n");
+  else if(sys_close(fd) == -1)
+    printf("> couldn't close file %s\n");
+
 }
 
 int main (int argc, char **argv)
@@ -185,9 +231,19 @@ int main (int argc, char **argv)
       readline("$ ");
       parse_args(&arg_count, arg_array);
 
-      if(!strcmp(arg_array[0], "ls")){
+      if (arg_count > 1 && !strcmp(arg_array[1], ">")) {
+        //write to file
+        if (arg_count > 2) {
+          write_string(arg_array[0], arg_array[2]);
+        } else {
+          //usage?
+        }
+      } else if(!strcmp(arg_array[0], "ls")){
         // LS
         ls(arg_array, arg_count, buff);
+      }else if(!strcmp(arg_array[0], "cp")){
+        // CP
+        cp(arg_array, arg_count, buff);
       }else if(!strcmp(arg_array[0], "cd")){
         // CD
         cd(arg_array, arg_count, buff, cwd);
