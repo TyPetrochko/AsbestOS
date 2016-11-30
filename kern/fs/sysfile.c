@@ -574,6 +574,7 @@ void sys_ls(tf_t *tf){
       k_buff[written] = ' ';
       written ++;
     }
+    KERN_DEBUG("name: %s\n", de.name);
     // copy into ls buffer
     strncpy(k_buff + written, de.name, MAX_BUF);
     written += strnlen(de.name, MAX_BUF);
