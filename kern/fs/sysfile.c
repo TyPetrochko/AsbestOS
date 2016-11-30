@@ -150,7 +150,6 @@ void sys_write(tf_t *tf)
 	syscall_set_retval1(tf, written);
   return ;
 bad:
-  KERN_DEBUG("wrote: %d n: %d\n", written,n);
 	spinlock_release(&k_buff_lock);
   syscall_set_errno(tf, E_BADF);
 	syscall_set_retval1(tf, -1);
@@ -473,8 +472,6 @@ void sys_open(tf_t *tf)
     return;
   }
   inode_unlock(ip);
-
-  KERN_DEBUG("normal settings\n");
 
   f->type = FD_INODE;
   f->ip = ip;

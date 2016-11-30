@@ -202,6 +202,15 @@ void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
   }
 }
 
+void mv(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
+  if (arg_count < 3) {
+    printf("Usage: mv <src> <dest>");
+    return;
+  }
+  cp(arg_array, arg_count, buff);
+  rm(arg_array, arg_count);
+}
+
 void echo(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
   int i;
   for(i = 1; i < arg_count; i++){
@@ -260,8 +269,11 @@ int main (int argc, char **argv)
         // CP
         cp(arg_array, arg_count, buff);
       }else if(!strcmp(arg_array[0], "rm")){
-        // CP
+        // RM
         rm(arg_array, arg_count);
+      }else if(!strcmp(arg_array[0], "mv")){
+        // MV
+        mv(arg_array, arg_count, buff);
       }else if(!strcmp(arg_array[0], "cd")){
         // CD
         cd(arg_array, arg_count, buff, cwd);
