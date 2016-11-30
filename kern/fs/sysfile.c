@@ -553,6 +553,7 @@ void sys_ls(tf_t *tf){
   
   pt_copyin(get_curid(), u_path, path, path_len + 1);
   cwd = namei(path);
+
   
   // basic error check
   if(!u_buff || n < 0 || n > MAX_BUF)
@@ -578,12 +579,12 @@ void sys_ls(tf_t *tf){
     if (de.inum == 0 || strnlen(de.name, MAX_BUF) + written >= MAX_BUF) {
       continue;
     }
+
     // copy in a space
     if(written > 0){
       k_buff[written] = ' ';
       written ++;
     }
-    //KERN_DEBUG("name: %s\n", de.name);
     // copy into ls buffer
     strncpy(k_buff + written, de.name, MAX_BUF);
     written += strnlen(de.name, MAX_BUF);

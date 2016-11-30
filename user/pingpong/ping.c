@@ -17,6 +17,7 @@ static char linebuf[BUFLEN];
 int buffer_index;
 
 int get_filetype(char *path);
+void cp_r(char *src, char *dst, char *buff);
 
 char *
 readline(const char *prompt)
@@ -149,7 +150,7 @@ void mk_dir(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
 void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
   int fd, read;
   if(arg_count < 2){
-    printf("usage: cat <filename>");
+    printf("usage: cat <filename>\n");
     return;
   }
 
@@ -225,21 +226,18 @@ void copy_file(char *to, char *from, char *buff){
   }
 }
 
-
 void cp_dir(char *src, char *dst, char *buff){
   char *ptr;
-  char dest_buff[BUFLEN], src_buff[BUFLEN]; // full-path holders
+  char dest_buff[BUFLEN], src_buff[BUFLEN], extra_buff[BUFLEN]; // full-path holders
   int a, b, fd;
 
   // list all files in src dir
   sys_ls(buff, src, BUFLEN);
 
   ptr = buff;
-  while(*ptr){
-    DEBUG("ls buffer is %s\n", ptr);
+  while(*ptr != '\0' && ptr < buff + strlen(buff) + 1){
     // gobble whitespace
     while(*ptr == ' ') ptr++;
-    DEBUG("A\n");
     // escape if necessary
     if(*ptr == '\0')
       break;
@@ -256,39 +254,76 @@ void cp_dir(char *src, char *dst, char *buff){
     // copy in a single word from "ls" into both buffers
     for(a = strlen(src_buff), b = strlen(dest_buff);
         *ptr != ' ' && *ptr != '\0';
-        src_buff[a++] = *ptr, dest_buff[b++] = *(ptr++));
-    DEBUG("B\n");
+        src_buff[a++] = *ptr, dest_buff[b++] = *(ptr++)){
+    }
 
     // null terminate
     src_buff[a] = '\0';
     dest_buff[b] = '\0';
+    
 
-    if(get_filetype(dest_buff) == T_DIR){
-      if(sys_mkdir(dest_buff) == -1)
-        printf("mkdir failed to make directory %s\n", dst);
-      cp_dir(dest_buff, src_buff, buff);
+    if(get_filetype(src_buff) == T_DIR){
+      if(mkdir(dest_buff) == -1){
+        printf("cp: mkdir on %s failed \n",dest_buff);
+        return;
+      }
+
+      cp_dir(src_buff, dest_buff, extra_buff);
     }else{
-      copy_file(dest_buff, src_buff, buff);
+      copy_file(dest_buff, src_buff, extra_buff);
     }
   }
+}
+
+void cp_r(char *src, char *dst, char *buff){
+  // make the file first, then do recursive copy
+  char new_dir[BUFLEN];
+  char *beginning;
+
+  // not sure why we need this
+  sys_ls(buff, src, BUFLEN);
+
+  // find the name of src
+  beginning = src + strlen(src);
+  while(beginning != src){
+    if(*beginning != '/')
+      beginning --;
+    else{
+      beginning ++;
+      break;
+    }
+  }
+
+  strcpy(new_dir, dst);
+  if(new_dir[strlen(new_dir) - 1] != '/')
+    strcpy(new_dir + strlen(new_dir), "/");
+  strcpy(new_dir + strlen(new_dir), beginning);
+
+  
+  if(sys_mkdir(new_dir) == -1){
+    printf("mkdir failed to make directory %s\n", new_dir);
+    return;
+  }
+
+  cp_dir(src, new_dir, buff);
 }
 
 void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
   int src, dest, read;
   if(arg_count < 3) {
-    printf("usage: cp [-r] <src> <dest>");
+    printf("usage: cp [-r] <src> <dest>\n");
     return;
   }
 
   if(!strcmp(arg_array[1], "-r") && arg_count >= 4)
-    cp_dir(arg_array[2], arg_array[3], buff);
-
-  copy_file(arg_array[2], arg_array[1], buff);
+    cp_r(arg_array[2], arg_array[3], buff);
+  else
+    copy_file(arg_array[2], arg_array[1], buff);
 }
 
 void mv(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
   if (arg_count < 3) {
-    printf("Usage: mv <src> <dest>");
+    printf("Usage: mv <src> <dest>\n");
     return;
   }
   cp(arg_array, arg_count, buff);
@@ -334,22 +369,26 @@ int get_filetype(char *path){
   struct file_stat st;
 
   if((fd = sys_open(path, O_RDONLY)) == -1){
-    printf("is_dir: couldn't open file %s\n", path);
+    printf("get_filetype: couldn't open file %s\n", path);
     return -1;
   }
 
   if(sys_fstat(fd, &st) == -1){
-    printf("is_dir: couldn't fstat file %s\n", path);
+    printf("get_filetype: couldn't fstat file %s\n", path);
     return -1;
   }
 
-  if(st.type != T_DIR && st.type != T_FILE && st.type != T_DEV)
-    printf("ls_dir: file %s has corrupted type: %d\n", path, st.type);
+  if(st.type != T_DIR && st.type != T_FILE && st.type != T_DEV){
+    printf("get_filetype: file %s has corrupted type: %d\n", path, st.type);
+    return -1;
+  }
 
   ret = st.type;
 
-  if(sys_close(fd) == -1)
-    printf("ls_dir: couldn't close file %s\n", path);
+  if(sys_close(fd) == -1){
+    printf("get_filetype: couldn't close file %s\n", path);
+    return -1;
+  }
 
   return ret;
 }
