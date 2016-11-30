@@ -263,7 +263,9 @@ static gcc_inline int
 sys_ls(char *buf, char *path, size_t n)
 {
 	int errno;
-	size_t ret;
+	size_t ret, path_len;
+
+  path_len = strlen(path);
 
 	asm volatile("int %2"
 		     : "=a" (errno),
@@ -272,7 +274,8 @@ sys_ls(char *buf, char *path, size_t n)
 		       "a" (SYS_ls),
 		       "b" (buf),
            "c" (path),
-		       "d" (n)
+		       "d" (n),
+           "S" (path_len)
 		     : "cc", "memory");
 
 	return errno ? -1 : ret;

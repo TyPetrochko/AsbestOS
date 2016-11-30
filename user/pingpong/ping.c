@@ -87,8 +87,18 @@ void parse_args(int *argc, char argv[MAXARGS][BUFLEN]) {
 }
 
 void ls(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
-  sys_ls(buff, ".", BUFLEN);
-  printf("%s\n", buff);
+  if(arg_count == 1){
+    printf("ls in cwd\n");
+    sys_ls(buff, ".", BUFLEN);
+    printf("%s\n", buff);
+  }else{
+    if(get_filetype(arg_array[1]) != T_DIR){
+      printf("ls: %s is not a directory\n", arg_array[1]);
+      return;
+    }
+    sys_ls(buff, arg_array[1], BUFLEN);
+    printf("%s\n", buff);
+  }
 }
 
 void cd(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff, char *cwd){
@@ -130,7 +140,6 @@ void touch(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
 }
 
 void mk_dir(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
-  //printf("%s %s\n", arg_array[0], arg_array[1]);
   if(arg_count < 2)
     printf("usage: mkdir <dirname>\n");
   else if(sys_mkdir(arg_array[1]) == -1)
@@ -139,11 +148,20 @@ void mk_dir(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
 
 void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
   int fd, read;
-  if(arg_count < 2)
+  if(arg_count < 2){
     printf("usage: cat <filename>");
+    return;
+  }
 
-  if(fd = sys_open(arg_array[1], O_RDONLY) == -1)
+  if(fd = sys_open(arg_array[1], O_RDONLY) == -1){
     printf("cat: could not open file %s\n", arg_array[1]);
+    return;
+  }
+
+  if(get_filetype(arg_array[1]) != T_FILE){
+    printf("cat: %s is not a regular file\n", arg_array[1]);
+    return;
+  }
 
   // zero the buffer
   buff[0] = '\0';
@@ -170,21 +188,16 @@ void rm(char arg_array[MAXARGS][BUFLEN], int arg_count) {
   }
 }
 
-void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
+void copy_file(char *to, char *from, char *buff){
   int src, dest, read;
-  if(arg_count < 3) {
-    printf("usage: cp <src> <dest>");
-    return;
-  }    
-
-  if((src = sys_open(arg_array[1], O_RDONLY)) == -1)
-    printf("cp: could not open file %s\n", arg_array[1]);
-  else if((dest = sys_open(arg_array[2], O_CREATE )) == -1)
-    printf("cp: could not open file %s\n", arg_array[2]);
+  if((src = sys_open(from, O_RDONLY)) == -1)
+    printf("cp: could not open file %s\n", from);
+  else if((dest = sys_open(to, O_CREATE )) == -1)
+    printf("cp: could not open file %s\n", to);
   else if(sys_close(dest) == -1)
-    printf("cp: couldn't close file %s\n", arg_array[2]);
-  else if((dest = sys_open(arg_array[2], O_WRONLY )) == -1)
-    printf("cp: could not open file %s\n", arg_array[2]);
+    printf("cp: couldn't close file %s\n", to);
+  else if((dest = sys_open(to, O_WRONLY )) == -1)
+    printf("cp: could not open file %s\n", to);
   else {
 
     // zero the buffer
@@ -205,11 +218,72 @@ void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
     }
 
     if(sys_close(src) == -1)
-      printf("cp: couldn't close file %s\n", arg_array[1]);
+      printf("cp: couldn't close file %s\n", from);
    
     if(sys_close(dest) == -1)
-      printf("cp: couldn't close file %s\n", arg_array[2]);
+      printf("cp: couldn't close file %s\n", to);
   }
+}
+
+
+void cp_dir(char *src, char *dst, char *buff){
+  char *ptr;
+  char dest_buff[BUFLEN], src_buff[BUFLEN]; // full-path holders
+  int a, b, fd;
+
+  // list all files in src dir
+  sys_ls(buff, src, BUFLEN);
+
+  ptr = buff;
+  while(*ptr){
+    DEBUG("ls buffer is %s\n", ptr);
+    // gobble whitespace
+    while(*ptr == ' ') ptr++;
+    DEBUG("A\n");
+    // escape if necessary
+    if(*ptr == '\0')
+      break;
+
+    // prepare dest_buff and src_buff to build full paths
+    strcpy(src_buff, src);
+    if(src_buff[strlen(src_buff) - 1] != '/')
+      strcpy(src_buff + strlen(src_buff), "/");
+    
+    strcpy(dest_buff, dst);
+    if(dest_buff[strlen(dest_buff) - 1] != '/')
+      strcpy(dest_buff + strlen(dest_buff), "/");
+
+    // copy in a single word from "ls" into both buffers
+    for(a = strlen(src_buff), b = strlen(dest_buff);
+        *ptr != ' ' && *ptr != '\0';
+        src_buff[a++] = *ptr, dest_buff[b++] = *(ptr++));
+    DEBUG("B\n");
+
+    // null terminate
+    src_buff[a] = '\0';
+    dest_buff[b] = '\0';
+
+    if(get_filetype(dest_buff) == T_DIR){
+      if(sys_mkdir(dest_buff) == -1)
+        printf("mkdir failed to make directory %s\n", dst);
+      cp_dir(dest_buff, src_buff, buff);
+    }else{
+      copy_file(dest_buff, src_buff, buff);
+    }
+  }
+}
+
+void cp(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
+  int src, dest, read;
+  if(arg_count < 3) {
+    printf("usage: cp [-r] <src> <dest>");
+    return;
+  }
+
+  if(!strcmp(arg_array[1], "-r") && arg_count >= 4)
+    cp_dir(arg_array[2], arg_array[3], buff);
+
+  copy_file(arg_array[2], arg_array[1], buff);
 }
 
 void mv(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
@@ -300,6 +374,8 @@ int main (int argc, char **argv)
     cwd[1] = '\0';
 
     while(1){
+      // zero line buffer
+      linebuf[0] = '\0';
       readline("$ ");
       parse_args(&arg_count, arg_array);
 
@@ -351,6 +427,7 @@ int main (int argc, char **argv)
         // TODO more here!
         printf("unrecognized command: %s\n", arg_array[0]);
       }
+      linebuf[0] = '\0';
     }
     return 0;
 }

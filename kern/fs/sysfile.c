@@ -539,18 +539,21 @@ void sys_chdir(tf_t *tf)
 }
 
 void sys_ls(tf_t *tf){
-  unsigned int u_buff;
-  size_t n, written; // bytes to read; bytes read
+  unsigned int u_buff, u_path;
+  size_t n, path_len, written; // bytes to read; bytes read
   struct inode *cwd;
-  char *path;
+  char path[128];
 
   // get args/init
   u_buff = syscall_get_arg2(tf);
-  path = syscall_get_arg3(tf);
+  u_path = syscall_get_arg3(tf);
   n = syscall_get_arg4(tf);
-  cwd = namei(path);
+  path_len = syscall_get_arg5(tf);
   written = 0;
-
+  
+  pt_copyin(get_curid(), u_path, path, path_len + 1);
+  cwd = namei(path);
+  
   // basic error check
   if(!u_buff || n < 0 || n > MAX_BUF)
     goto bad;
