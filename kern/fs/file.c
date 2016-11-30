@@ -111,7 +111,7 @@ file_read(struct file *f, char *addr, int n)
   }
   if(f->type == FD_INODE){
     inode_lock(f->ip);
-    KERN_DEBUG("Here!\n");
+    //KERN_DEBUG("Here!\n");
     if((r = inode_read(f->ip, addr, f->off, n)) > 0)
       f->off += r;
     inode_unlock(f->ip);
@@ -130,7 +130,7 @@ file_write(struct file *f, char *addr, int n)
 
   if(f->writable == 0)
     return -1;
-  KERN_DEBUG("writable\n");
+  //KERN_DEBUG("writable\n");
   if(f->type == FD_INODE){
     // Write a few blocks at a time to avoid exceeding
     // the maximum log transaction size, including
