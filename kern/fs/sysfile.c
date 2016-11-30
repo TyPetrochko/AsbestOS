@@ -538,11 +538,13 @@ void sys_ls(tf_t *tf){
   unsigned int u_buff;
   size_t n, written; // bytes to read; bytes read
   struct inode *cwd;
+  char *path;
 
   // get args/init
   u_buff = syscall_get_arg2(tf);
-  n = syscall_get_arg3(tf);
-  cwd = tcb_get_cwd(get_curid());
+  path = syscall_get_arg3(tf);
+  n = syscall_get_arg4(tf);
+  cwd = namei(path);
   written = 0;
 
   // basic error check

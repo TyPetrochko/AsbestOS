@@ -79,7 +79,7 @@ void parse_args(int *argc, char argv[MAXARGS][BUFLEN]) {
 }
 
 void ls(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
-  sys_ls(buff, BUFLEN);
+  sys_ls(buff, ".", BUFLEN);
   printf("%s\n", buff);
 }
 

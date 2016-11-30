@@ -260,7 +260,7 @@ sys_chdir(char *path)
 }
 
 static gcc_inline int
-sys_ls(char *buf, size_t n)
+sys_ls(char *buf, char *path, size_t n)
 {
 	int errno;
 	size_t ret;
@@ -271,7 +271,8 @@ sys_ls(char *buf, size_t n)
 		     : "i" (T_SYSCALL),
 		       "a" (SYS_ls),
 		       "b" (buf),
-		       "c" (n)
+           "c" (path),
+		       "d" (n)
 		     : "cc", "memory");
 
 	return errno ? -1 : ret;
