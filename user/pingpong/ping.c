@@ -232,6 +232,19 @@ void write_string(char * string, char * path) {
 
 }
 
+void append_string(char *string, char *path, char* buff) {
+  int fd, read;
+  if((fd = sys_open(path, O_RDWR)) == -1)
+    printf("> could not open file %s\n", path);
+  else {
+    while((read = sys_read(fd, buff, BUFLEN - 1)) == BUFLEN - 1);
+    if (sys_write(fd, string, strlen(string)) == -1)
+      printf("> failed to write\n");
+    else if(sys_close(fd) == -1)
+      printf("> couldn't close file %s\n");
+    }
+}
+
 int main (int argc, char **argv)
 {
     printf("shell started.\n");
@@ -259,6 +272,13 @@ int main (int argc, char **argv)
         //write to file
         if (arg_count > 2) {
           write_string(arg_array[0], arg_array[2]);
+        } else {
+          //usage?
+        }
+      } else if (arg_count > 1 && !strcmp(arg_array[1], ">>")) {
+        //write to file
+        if (arg_count > 2) {
+          append_string(arg_array[0], arg_array[2], buff);
         } else {
           //usage?
         }
