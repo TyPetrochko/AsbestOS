@@ -178,11 +178,56 @@ void cat(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
     printf("cat: couldn't close file %s\n", arg_array[1]);
 }
 
-void rm(char arg_array[MAXARGS][BUFLEN], int arg_count) {
+void rm_dir(char *src, char *buff){
+  char *ptr;
+  char src_buff[BUFLEN]; // full-path holders
+  int a, fd;
+
+  // list all files in src dir
+  sys_ls(buff, src, BUFLEN);
+
+  ptr = buff;
+  while(*ptr != '\0' && ptr < buff + strlen(buff) + 1){
+    // gobble whitespace
+    while(*ptr == ' ') ptr++;
+    // escape if necessary
+    if(*ptr == '\0')
+      break;
+
+    // prepare src_buff to build full paths
+    strcpy(src_buff, src);
+    if(src_buff[strlen(src_buff) - 1] != '/')
+      strcpy(src_buff + strlen(src_buff), "/");
+    
+    // copy in a single word from "ls" into buffer
+    for(a = strlen(src_buff);
+        *ptr != ' ' && *ptr != '\0';
+        src_buff[a++] = *(ptr++)){;
+    }
+
+    // null terminate
+    src_buff[a] = '\0'; 
+
+    if(get_filetype(src_buff) == T_DIR){
+      rm_dir(src_buff, buff);
+    }
+    if (sys_unlink(src_buff) == -1) {
+      printf("rm: error removing %s", src_buff);
+    }
+  }
+}
+
+void rm(char arg_array[MAXARGS][BUFLEN], int arg_count, char * buff) {
   if (arg_count < 2) {
     printf("usage: rm <filename>\n");
+  } else if (arg_count > 2 && !strcmp(arg_array[1], "-r")) {
+    //recursive
+    rm_dir(arg_array[2], buff);
+    if (sys_unlink(arg_array[2]) == -1){
+      printf("rm: error unlinking dir in rm -r %s\n", arg_array[1]);
+    }
   } else if (get_filetype(arg_array[1]) != T_FILE){
-    printf("rm: %s is not a file\n", arg_array[1]);
+    printf("rm: %s is not a file, try \"rm -r\"\n", arg_array[1]);
   } else if (sys_unlink(arg_array[1]) == -1){
     printf("rm: error unlinking file %s\n", arg_array[1]);
   }
@@ -325,8 +370,8 @@ void mv(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff) {
     printf("Usage: mv <src> <dest>\n");
     return;
   }
-  cp(arg_array, arg_count, buff);
-  rm(arg_array, arg_count);
+  copy_file(arg_array[2], arg_array[1], buff);
+  rm(arg_array, arg_count, buff);
 }
 
 void echo(char arg_array[MAXARGS][BUFLEN], int arg_count, char *buff){
@@ -439,7 +484,7 @@ int main (int argc, char **argv)
         cp(arg_array, arg_count, buff);
       }else if(!strcmp(arg_array[0], "rm")){
         // RM
-        rm(arg_array, arg_count);
+        rm(arg_array, arg_count, buff);
       }else if(!strcmp(arg_array[0], "mv")){
         // MV
         mv(arg_array, arg_count, buff);
