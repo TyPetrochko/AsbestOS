@@ -10,7 +10,19 @@ Alex Ringlen and Tyler Petrochko completed this lab as partners.
 
 Alex coded parts 1-12, 15, and parts of 17. Tyler coded parts 13, 14, 16, and parts of 17. Of the features listed in step 17, Alex wrote code to support "cp", "mv", "rm", "rm -r", ">", and ">>", while Tyler wrote code to support "ls", "pwd", "cd", "mkdir", "cat", "touch", and "cp -r".
 
-In part 13, we implemented additional functionality in user/include/syscall.h and kern/lib/sysfile.c to add length parameters to system calls that involve passing a string to the kernel. In parts 16 and 17, we re-used the "ping" process from earlier in the semester to make a shell process, and implemented the sys_getc() system call.
+In part 2 we implemented thread_sleep and thread_wakeup, which provide functionality allowing threads to wait (with sleep) until a resource/channel is ready and to be woken up via thread_wakeup once that resource is available. In part 3 we modified the interrupt handler to interface with these new calls.
+
+In part 9 we implemented dir_link and dir_lookup, functions useful for allowing the writing of information to the disk. dir_lookup finds the offset of a file by reading through a directory, and dir_link creates a new directory entry within the inode for a given directory.
+
+In part 10 we implemented skipelem and namex, functions involved in the parsing of path names. Skipelem sequentially returns path elements separated by '/'s, while namex returns an inode number by looking sequentially though each directory returned by skipelem.
+
+In part 12, we implemented additional functionality in user/include/syscall.h and kern/lib/sysfile.c to add length parameters to system calls that involve passing a string to the kernel. 
+
+In part 13 we implemented relevant system calls for reading and writing to files, allocating space for new files, closing and opening files, and getting status information from files (like whether or not a file is a directory.)
+
+In part 15 we added spinlocks to the system call implementation to support concurrency.
+
+In parts 16 and 17, we re-used the "ping" process from earlier in the semester to make a shell process, and implemented the sys_getc() system call.
 
 In part 17, we introduced two new system calls, sys_ls() and sys_getc(). We used sys_getc() to get user input from the keyboard, and sys_ls() to fill a buffer with files contained within a given directory. The remaining shell functionality was built on top of existing system calls.
 
@@ -18,7 +30,13 @@ To implement ls, we simply use the sys_ls() system call on the current working d
 
 The "cat" command is fairly straightfoward; it opens a file with sys_open(), reads the contents with sys_read() into a user buffer, then outputs the result to the console. We also implemented an additional shell command, "echo", which re-prints user input to the console. Touch is also fairly simple; it invokes sys_open() with the O_CREATE flag set, which results in a newly-made file.
 
-The recursive option for "cp" is arguably the most complex operation; it involves recursively building path buffers as it traverses the directory trees of the source and destination argument, copying and files over appropriately. It makes heavy use of the sys_ls() system call, and parses the result.
+">" writes the first parsed argument to a file, the third argument, while ">>" appends. ">>" works by opening the target file with the O_RDWR flag and first reading to the end of the file, before writing the given content.
+
+"rm" simply unlinks the given file and checks the result. "rm -r" must recursively check all of the files in the directory by using "ls". If any of these are directories, a recursive call is made; otherwise, they are unlinked.
+
+"cp" must simply open the source file for writing and the destination for writing, and write the data from the source to the destination. The recursive option for "cp" is arguably the most complex operation; it involves recursively building path buffers as it traverses the directory trees of the source and destination argument, copying and files over appropriately. It makes heavy use of the sys_ls() system call, and parses the result.
+
+"mv" works by first using "cp" and then "rm"ing the original file.
 
 Example shell dialogue:
 
@@ -55,3 +73,13 @@ Example shell dialogue:
       $ es >> a/file1
       $ cat a/file1
       potatoes
+      $ mv a/file1 a/filex
+      $ cat a/filex
+      potatoes
+      $ cat a/file3
+      
+      $ rm -r a
+      $ ls
+      b
+
+Note: the shell implementation is located in ping.c
