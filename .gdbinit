@@ -19,8 +19,8 @@ define hook-stop
   set $lastcs = $cs
 end
 
-echo + target remote localhost:26797\n
-target remote localhost:26797
+echo + target remote localhost:26961\n
+target remote localhost:26961
 
 # If this fails, it's probably because your GDB doesn't support ELF.
 # Look at the tools page at

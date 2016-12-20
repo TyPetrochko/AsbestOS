@@ -101,7 +101,7 @@ sys_read(int fd, char *buf, size_t n)
 }
 
 static gcc_inline int
-sys_VGA_map(char *buf, size_t n)
+sys_vga_map(char *buf, size_t n)
 {
 	int errno;
 	size_t ret;

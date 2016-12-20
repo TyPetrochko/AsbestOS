@@ -443,6 +443,16 @@ int main (int argc, char **argv)
     char arg_array[MAXARGS][BUFLEN], buff[BUFLEN], cwd[BUFLEN];
     int arg_count, fd, read;
 
+    //setup vga mem
+    printf("trying to set up vga map\n");
+    unsigned char vga_mem[10000];
+    //n doesnt matter atm
+    sys_vga_map(&vga_mem, 20);
+    //try coloring
+    for (int i = 0; i < 500; i++) {
+        vga_mem[i] = 1;
+    }
+
     // Try to read from current directory
     //  1) Sanity check
     //  2) sys_open initializes the disk log (if we omit this, mkdir fails)
@@ -460,6 +470,7 @@ int main (int argc, char **argv)
       // zero line buffer
       linebuf[0] = '\0';
       readline("$ ");
+
       parse_args(&arg_count, arg_array);
 
       if (arg_count > 1 && !strcmp(arg_array[1], ">")) {

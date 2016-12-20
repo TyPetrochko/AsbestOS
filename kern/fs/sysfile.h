@@ -14,3 +14,4 @@ void sys_open(tf_t *tf);
 void sys_mkdir(tf_t *tf);
 void sys_chdir(tf_t *tf);
 void sys_ls(tf_t *tf);
+void sys_vga_map(tf_t *tf);

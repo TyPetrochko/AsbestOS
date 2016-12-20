@@ -362,6 +362,7 @@ video_set_cursor (int x, int y)
 void
 video_clear_screen ()
 {
+    KERN_DEBUG("video clear screen\n");
     int i;
     for (i = 0; i < CRT_SIZE; i++)
     {
