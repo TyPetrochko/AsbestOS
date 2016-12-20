@@ -239,6 +239,7 @@ void clear_screen(){
   for(int i = 0; i < MAP_SIZE; i++){
     VGAMap[i] = 0x00;
   }
+  cursor = 0;
 }
 
 // shift everything up a line
