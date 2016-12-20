@@ -118,6 +118,23 @@ sys_vga_map(unsigned int start_address)
 }
 
 static gcc_inline int
+sys_switch_mode(int mode)
+{
+	int errno;
+	size_t ret;
+
+	asm volatile("int %2"
+		     : "=a" (errno),
+		       "=b" (ret)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_switch_mode),
+		       "b" (mode)
+		     : "cc", "memory");
+
+	return errno ? -1 : ret;
+}
+
+static gcc_inline int
 sys_write(int fd, char *p, int n)
 {
 	int errno;

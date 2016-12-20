@@ -14,6 +14,9 @@
 #define PLANES 4
 #define MAP_SIZE (LINE_LEN * LINES)
 
+//0 --> text, 1 --> video
+int mode = 0;
+
 /** 
  * 8x8 monochrome bitmap fonts for rendering
  * Author: Daniel Hepper <daniel@hepper.net>
@@ -242,6 +245,10 @@ void clear_screen(){
   cursor = 0;
 }
 
+void video_set_mode(int m) {
+  mode = m;
+}
+
 // shift everything up a line
 void shift_up(){
   for(int i = 0; i < LINES - 1; i++){ // y
@@ -265,93 +272,95 @@ void putc_at(char c, unsigned int x, unsigned int y){
 
 void video_putc(int c)
 {
-  int old, new;
-	switch (c & 0xff) {
-	  case '\b':
-	  	if (cursor > 0) {
-        cursor --;
-        video_putc(' ');
-        cursor--;
-	  	}
-      clear_screen();
-	  	break;
-	  case '\n':
-      // eat up end of line with whitespace
-      old = cursor;
-      cursor -= cursor % cols;
-      cursor += cols;
-      new = cursor;
+  if (!mode) {
+    int old, new;
+  	switch (c & 0xff) {
+  	  case '\b':
+  	  	if (cursor > 0) {
+          cursor --;
+          video_putc(' ');
+          cursor--;
+  	  	}
+        clear_screen();
+  	  	break;
+  	  case '\n':
+        // eat up end of line with whitespace
+        old = cursor;
+        cursor -= cursor % cols;
+        cursor += cols;
+        new = cursor;
 
-      while(old < new){
-        putc_at(' ', old % cols, old / cols);
-        old++;
-      }
-      // possibly shift up
-      if(cursor == (rows * cols)){
-        cursor = cursor + 1 - cols;
-        shift_up();
-      }else
-        cursor = (cursor + 1) % (rows * cols);
-      break;
-	  	/* fallthru */
-	  // case '\r':
-	  // 	terminal.crt_pos -= (terminal.crt_pos % CRT_COLS);
-	  // 	break;
-	  case '\t':
-	  	video_putc(' ');
-	  	video_putc(' ');
-	  	video_putc(' ');
-	  	video_putc(' ');
-	  	video_putc(' ');
-	  	break;
-	  default:
-      // print char
-      putc_at(c, cursor % cols, cursor / cols);
+        while(old < new){
+          putc_at(' ', old % cols, old / cols);
+          old++;
+        }
+        // possibly shift up
+        if(cursor == (rows * cols)){
+          cursor = cursor + 1 - cols;
+          shift_up();
+        }else
+          cursor = (cursor + 1) % (rows * cols);
+        break;
+  	  	/* fallthru */
+  	  // case '\r':
+  	  // 	terminal.crt_pos -= (terminal.crt_pos % CRT_COLS);
+  	  // 	break;
+  	  case '\t':
+  	  	video_putc(' ');
+  	  	video_putc(' ');
+  	  	video_putc(' ');
+  	  	video_putc(' ');
+  	  	video_putc(' ');
+  	  	break;
+  	  default:
+        // print char
+        putc_at(c, cursor % cols, cursor / cols);
 
-      cursor++;
-      if(cursor == (rows * cols)){
-        cursor = cursor - cols;
-        shift_up();
-      }else
-        cursor = (cursor) % (rows * cols);
-	  	break;
-	}
+        cursor++;
+        if(cursor == (rows * cols)){
+          cursor = cursor - cols;
+          shift_up();
+        }else
+          cursor = (cursor) % (rows * cols);
+  	  	break;
+  	}
 
-	// if (terminal.crt_pos >= CRT_SIZE) {
-	// 	int i;
-	// 	memmove(terminal.crt_buf, terminal.crt_buf + CRT_COLS,
-	// 		(CRT_SIZE - CRT_COLS) * sizeof(uint16_t));
-	// 	for (i = CRT_SIZE - CRT_COLS; i < CRT_SIZE; i++)
-	// 		terminal.crt_buf[i] = 0x0700 | ' ';
-	// 	terminal.crt_pos -= CRT_COLS;
-	// }
+  	// if (terminal.crt_pos >= CRT_SIZE) {
+  	// 	int i;
+  	// 	memmove(terminal.crt_buf, terminal.crt_buf + CRT_COLS,
+  	// 		(CRT_SIZE - CRT_COLS) * sizeof(uint16_t));
+  	// 	for (i = CRT_SIZE - CRT_COLS; i < CRT_SIZE; i++)
+  	// 		terminal.crt_buf[i] = 0x0700 | ' ';
+  	// 	terminal.crt_pos -= CRT_COLS;
+  	// }
 
 
-	// /* move that little blinky thing */
-	// outb(addr_6845, 14);
-	// outb(addr_6845 + 1, terminal.crt_pos >> 8);
-	// outb(addr_6845, 15);
-	// outb(addr_6845 + 1, terminal.crt_pos);
-      
-	//tmphack
-        //static  int tmpcount = 0;
-        /*static	int tmpcount = 0 ;
-       	int i;
-	if(tmpcount <11946)
-	  {
-        for (i = 0;
-       !(inb(COM1 + COM_LSR) & COM_LSR_TXRDY) && i < 12800;//is_transimit_empty
-       	     i++)
-       	  {
-       	    inb(0x84);
-       	    inb(0x84);
-       	    inb(0x84);
-       	    inb(0x84);
-       	  }
-       outb(COM1+COM_TX, c);
-       tmpcount++;
-	  }
-	*/
+  	// /* move that little blinky thing */
+  	// outb(addr_6845, 14);
+  	// outb(addr_6845 + 1, terminal.crt_pos >> 8);
+  	// outb(addr_6845, 15);
+  	// outb(addr_6845 + 1, terminal.crt_pos);
+        
+  	//tmphack
+          //static  int tmpcount = 0;
+          /*static	int tmpcount = 0 ;
+         	int i;
+  	if(tmpcount <11946)
+  	  {
+          for (i = 0;
+         !(inb(COM1 + COM_LSR) & COM_LSR_TXRDY) && i < 12800;//is_transimit_empty
+         	     i++)
+         	  {
+         	    inb(0x84);
+         	    inb(0x84);
+         	    inb(0x84);
+         	    inb(0x84);
+         	  }
+         outb(COM1+COM_TX, c);
+         tmpcount++;
+  	  }
+  	*/
+  }
 }
 
 void
@@ -360,6 +369,8 @@ video_set_cursor (int x, int y)
     terminal.crt_pos = x * CRT_COLS + y;
 }
 
+
+//BAD
 void
 video_clear_screen ()
 {

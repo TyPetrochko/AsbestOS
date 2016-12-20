@@ -128,6 +128,18 @@ void sys_vga_map(tf_t *tf)
   syscall_set_retval1(tf, 0);
 }
 
+void sys_switch_mode(tf_t *tf) {
+  KERN_DEBUG("called switch mode\n");
+
+  int mode = syscall_get_arg2(tf);
+
+  video_set_mode(mode);
+  clear_screen();
+
+  syscall_set_errno(tf, E_SUCC);
+  syscall_set_retval1(tf, 0);
+}
+
 /**
  * Write n bytes of data in the user's buffer into the file indexed by the file descriptor.
  * You should first copy the data info an in-kernel buffer with pt_copyin and then

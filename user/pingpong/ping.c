@@ -456,7 +456,7 @@ int main (int argc, char **argv)
     // for(int i = 0; i < MAP_SIZE; i++){
     //   vga_mem[i] = 0xAA;
     // }
-
+    sys_switch_mode(0);
 
 
     // Try to read from current directory
@@ -523,9 +523,21 @@ int main (int argc, char **argv)
       }else if(!strcmp(arg_array[0], "echo")){
         // MKDIR
         echo(arg_array, arg_count, buff);
-      }else{
+      } else if (!strcmp(arg_array[0], "video")){
+        sys_switch_mode(1);
+        // for(int i = 0; i < MAP_SIZE; i++){
+        //   vga_mem[i] = 0x11;
+        // }
+      } else if (!strcmp(arg_array[0], "novideo")){
+        sys_switch_mode(0);
+      }else if (!strcmp(arg_array[0], "draw")) {
+        for(int i = 0; i < MAP_SIZE; i++){
+          vga_mem[i] = 0x11;
+        }
+      }else {
         // TODO more here!
         printf("unrecognized command: %s\n", arg_array[0]);
+         
       }
       linebuf[0] = '\0';
     }

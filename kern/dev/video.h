@@ -183,5 +183,6 @@ void video_putc(int c);
 extern void video_update();
 void video_set_cursor (int x, int y);
 void video_clear_screen ();
+void video_set_mode(int m);
 
 #endif /* !_KERN_DEV_VIDEO_H_ */

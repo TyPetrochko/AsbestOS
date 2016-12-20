@@ -51,6 +51,7 @@ enum __syscall_nr {
   SYS_stat,
   SYS_ls,
   SYS_vga_map,
+  SYS_switch_mode,
   MAX_SYSCALL_NR	/* XXX: always put it at the end of __syscall_nr */
 };
 

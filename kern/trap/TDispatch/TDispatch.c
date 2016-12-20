@@ -109,6 +109,9 @@ void syscall_dispatch(tf_t *tf)
   case SYS_vga_map:
     sys_vga_map(tf);
     break;
+  case SYS_switch_mode:
+    sys_switch_mode(tf);
+    break;
   default:
     syscall_set_errno(tf, E_INVAL_CALLNR);
   }
