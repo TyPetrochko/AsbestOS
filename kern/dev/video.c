@@ -171,6 +171,10 @@ char font8x8_basic[128][8] = {
 
 char *VGAMap = (char*) 0xa0000;
 
+int cursor = 0;
+int rows = 60;
+int cols = 80;
+
 void
 video_init(void)
 {
@@ -258,64 +262,57 @@ void putc_at(char c, unsigned int x, unsigned int y){
   }
 }
 
-int idx = 0;
-int rows = 60;
-int cols = 80;
 void video_putc(int c)
 {
   int old, new;
-  // if no attribute given, then use black on white
-	// if (!(c & ~0xFF))
-	// 	c |= 0x0700;
-  //
 	switch (c & 0xff) {
-	case '\b':
-    clear_screen();
-		if (idx > 0) {
-      idx --;
-      idx = (idx + 1) % (rows * cols);
-		}
-		break;
-	case '\n':
-    // eat up end of line with whitespace
-    old = idx;
-    idx -= idx % cols;
-    idx += cols;
-    new = idx;
+	  case '\b':
+	  	if (cursor > 0) {
+        cursor --;
+        video_putc(' ');
+        cursor--;
+	  	}
+	  	break;
+	  case '\n':
+      // eat up end of line with whitespace
+      old = cursor;
+      cursor -= cursor % cols;
+      cursor += cols;
+      new = cursor;
 
-    while(old < new){
-      putc_at(' ', old % cols, old / cols);
-      old++;
-    }
-    // possibly shift up
-    if(idx == (rows * cols)){
-      idx = idx + 1 - cols;
-      shift_up();
-    }else
-      idx = (idx + 1) % (rows * cols);
-    break;
-		/* fallthru */
-	// case '\r':
-	// 	terminal.crt_pos -= (terminal.crt_pos % CRT_COLS);
-	// 	break;
-	// case '\t':
-	// 	video_putc(' ');
-	// 	video_putc(' ');
-	// 	video_putc(' ');
-	// 	video_putc(' ');
-	// 	video_putc(' ');
-	// 	break;
-	default:
-    // print char
-    putc_at(c, idx % cols, idx / cols);
+      while(old < new){
+        putc_at(' ', old % cols, old / cols);
+        old++;
+      }
+      // possibly shift up
+      if(cursor == (rows * cols)){
+        cursor = cursor + 1 - cols;
+        shift_up();
+      }else
+        cursor = (cursor + 1) % (rows * cols);
+      break;
+	  	/* fallthru */
+	  // case '\r':
+	  // 	terminal.crt_pos -= (terminal.crt_pos % CRT_COLS);
+	  // 	break;
+	  case '\t':
+	  	video_putc(' ');
+	  	video_putc(' ');
+	  	video_putc(' ');
+	  	video_putc(' ');
+	  	video_putc(' ');
+	  	break;
+	  default:
+      // print char
+      putc_at(c, cursor % cols, cursor / cols);
 
-    idx++;
-    if(idx == (rows * cols)){
-      idx = idx - cols;
-      shift_up();
-    }else
-      idx = (idx) % (rows * cols);
-		break;
+      cursor++;
+      if(cursor == (rows * cols)){
+        cursor = cursor - cols;
+        shift_up();
+      }else
+        cursor = (cursor) % (rows * cols);
+	  	break;
 	}
 
 	// if (terminal.crt_pos >= CRT_SIZE) {
