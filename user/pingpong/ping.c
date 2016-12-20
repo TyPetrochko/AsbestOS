@@ -7,6 +7,7 @@
 
 #define BUFLEN 1024
 #define MAXARGS 10
+#define PAGESIZE 4096
 
 /* these aren't included for some reason */
 #define T_DIR  1   // Directory
@@ -443,15 +444,20 @@ int main (int argc, char **argv)
     char arg_array[MAXARGS][BUFLEN], buff[BUFLEN], cwd[BUFLEN];
     int arg_count, fd, read;
 
-    //setup vga mem
+
+
+    //setup vga mem TODO: put this somewhere else
     printf("trying to set up vga map\n");
-    unsigned char vga_mem[10000];
+    int MAP_SIZE = 80*480;
+    char vga_mem[MAP_SIZE] __attribute__ ((aligned(PAGESIZE)));
     //n doesnt matter atm
-    sys_vga_map(&vga_mem, 20);
+    sys_vga_map(&vga_mem);
     //try coloring
-    for (int i = 0; i < 500; i++) {
-        vga_mem[i] = 1;
-    }
+    // for(int i = 0; i < MAP_SIZE; i++){
+    //   vga_mem[i] = 0xAA;
+    // }
+
+
 
     // Try to read from current directory
     //  1) Sanity check

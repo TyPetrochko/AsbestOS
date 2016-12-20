@@ -273,6 +273,7 @@ void video_putc(int c)
         video_putc(' ');
         cursor--;
 	  	}
+      clear_screen();
 	  	break;
 	  case '\n':
       // eat up end of line with whitespace

@@ -101,7 +101,7 @@ sys_read(int fd, char *buf, size_t n)
 }
 
 static gcc_inline int
-sys_vga_map(char *buf, size_t n)
+sys_vga_map(unsigned int start_address)
 {
 	int errno;
 	size_t ret;
@@ -111,8 +111,7 @@ sys_vga_map(char *buf, size_t n)
 		       "=b" (ret)
 		     : "i" (T_SYSCALL),
 		       "a" (SYS_vga_map),
-		       "b" (buf),
-		       "c" (n)
+		       "b" (start_address)
 		     : "cc", "memory");
 
 	return errno ? -1 : ret;

@@ -18,6 +18,7 @@
 #include "fcntl.h"
 
 #define MAX_BUF 10000
+#define VGA_PAGE 160
 
 char k_buff[MAX_BUF];
 spinlock_t k_buff_lock; 
@@ -111,23 +112,18 @@ bad:
 void sys_vga_map(tf_t *tf)
 {
   KERN_DEBUG("called sys_vga_map\n");
-  unsigned char u_buff;
-  size_t n; //at the moment we dont use this
-
-  // get args
-  u_buff = syscall_get_arg2(tf);
-  n = syscall_get_arg3(tf);
-
-  // TODO set up mapping here
-  //for now, auto map
-  //unsigned int map_page(unsigned int proc_index, unsigned int vadr, unsigned int page_index, unsigned int perm)
+  unsigned int start_address;
   int retval;
+
+  // get arg
+  start_address = syscall_get_arg2(tf);
+
   for (int i = 0; i < 10; i++) { //10 comes from piazza, janky for now
-    if ((retval = map_page(get_curid(), u_buff + (i * PAGESIZE), 160 + i, 7)) != 0) {
+    if ((retval = map_page(get_curid(), start_address + (i * PAGESIZE), VGA_PAGE + i, 7)) != 0) {
       KERN_DEBUG("map page has retval: %d on %dth mapping\n", retval, i);
     }
   }
-  video_clear_screen(); //test screen clear
+  
   syscall_set_errno(tf, E_SUCC);
   syscall_set_retval1(tf, 0);
 }
