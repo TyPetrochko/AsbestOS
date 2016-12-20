@@ -101,6 +101,24 @@ sys_read(int fd, char *buf, size_t n)
 }
 
 static gcc_inline int
+sys_VGA_map(char *buf, size_t n)
+{
+	int errno;
+	size_t ret;
+
+	asm volatile("int %2"
+		     : "=a" (errno),
+		       "=b" (ret)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_vga_map),
+		       "b" (buf),
+		       "c" (n)
+		     : "cc", "memory");
+
+	return errno ? -1 : ret;
+}
+
+static gcc_inline int
 sys_write(int fd, char *p, int n)
 {
 	int errno;

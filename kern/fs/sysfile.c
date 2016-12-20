@@ -107,6 +107,19 @@ bad:
   return ;
 }
 
+void sys_vga_map(tf_t *tf)
+{
+  unsigned int u_buff;
+  size_t n, read; // bytes to read; bytes read
+  struct file *f;
+
+  // get args
+  u_buff = syscall_get_arg2(tf);
+  n = syscall_get_arg3(tf);
+
+  // TODO set up mapping here
+}
+
 /**
  * Write n bytes of data in the user's buffer into the file indexed by the file descriptor.
  * You should first copy the data info an in-kernel buffer with pt_copyin and then
