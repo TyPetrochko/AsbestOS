@@ -217,7 +217,7 @@ static inline void outw(int port, uint16_t data)
 }
 
 void out(int n){
-  KERN_DEBUG("out...\n");
+  //KERN_DEBUG("out...\n");
   outw( 0x3ce, 0x0005);
   
   switch(n){
@@ -375,7 +375,7 @@ video_set_cursor (int x, int y)
 void
 video_clear_screen ()
 {
-    KERN_DEBUG("video clear screen\n");
+   // KERN_DEBUG("video clear screen\n");
     int i;
     for (i = 0; i < CRT_SIZE; i++)
     {

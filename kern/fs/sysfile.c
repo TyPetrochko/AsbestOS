@@ -111,7 +111,7 @@ bad:
 
 void sys_vga_map(tf_t *tf)
 {
-  KERN_DEBUG("called sys_vga_map\n");
+  //KERN_DEBUG("called sys_vga_map\n");
   unsigned int start_address;
   int retval;
 
@@ -129,7 +129,7 @@ void sys_vga_map(tf_t *tf)
 }
 
 void sys_switch_mode(tf_t *tf) {
-  KERN_DEBUG("called switch mode\n");
+  //KERN_DEBUG("called switch mode\n");
 
   int mode = syscall_get_arg2(tf);
 
@@ -141,7 +141,7 @@ void sys_switch_mode(tf_t *tf) {
 }
 
 void sys_set_frame(tf_t *tf) {
-  KERN_DEBUG("called set frame\n");
+  //KERN_DEBUG("called set frame\n");
 
   int frame = syscall_get_arg2(tf);
   if (frame < 4 && frame >= 0) {

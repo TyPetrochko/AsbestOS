@@ -32,7 +32,85 @@ void vga_init() {
 void vga_set_frame(int frame) {
   sys_set_frame(frame);
 }
-/*               */
+/*  Game of Life program  */
+#define GAME_HEIGHT 60
+#define GAME_WIDTH 80
+int board[GAME_HEIGHT][GAME_WIDTH];
+void life_init() {
+  for (int i = 0; i < GAME_HEIGHT; i++) {
+    for (int j = 0; j < GAME_WIDTH; j++) {
+      board[i][j] = 0;
+    }
+  }
+  //for now, add some squares
+  board[11][21] = 1;
+  board[11][22] = 1;
+  board[11][23] = 1;
+  board[12][21] = 1;
+  board[13][22] = 1;
+}
+
+void life_evolve() {
+  int counts[GAME_HEIGHT][GAME_WIDTH];
+  int new[GAME_HEIGHT][GAME_WIDTH];
+  for (int y = 0; y < GAME_HEIGHT; y++) {  
+    for (int x = 0; x < GAME_WIDTH; x++) {
+      counts[y][x] = 0;
+      //check adjacent squares
+      for (int cur_y = y - 1; cur_y <= y + 1; cur_y++) {
+        for (int cur_x = x - 1; cur_x <= x + 1; cur_x++) {
+          if (y != cur_y || x != cur_x) {
+            counts[y][x] += board[(cur_y + GAME_HEIGHT) % GAME_HEIGHT][(cur_x + GAME_WIDTH) % GAME_WIDTH];
+          }
+        }
+      }
+      //determine future
+      // if (counts[y][x])
+      //   printf("counts for x=%d y=%d: %d\n", x, y, counts[y][x]);
+      if (board[y][x]) {
+        if (counts[y][x] == 2 || counts[y][x] == 3) {
+          new[y][x] = 1;
+        } else {
+          new[y][x] = 0;
+        }
+      } else {
+        if (counts[y][x] == 3) {
+          new[y][x] = 1;
+        } else {
+          new[y][x] = 0;
+        }
+      }
+    }
+  }
+  //copy over
+  for (int y = 0; y < GAME_HEIGHT; y++) {  
+    for (int x = 0; x < GAME_WIDTH; x++) {
+      board[y][x] = new[y][x];
+    }
+  }
+}
+
+void life_print_board() {
+  for (int y = 0; y < GAME_HEIGHT; y++) {  
+    for (int x = 0; x < GAME_WIDTH; x++) {
+      for(int i = 0; i < 8; i++){
+        vga_mem[(y*8 + i - 1) * GAME_WIDTH + x] = (board[y][x] ? 0xFF : 0x00);
+      }
+    }
+  }
+}
+
+void life_continuous_evolve() {
+  while(1) {
+    life_evolve();
+    life_print_board();
+    for (int i = 0; i < 10; i++) {
+      sys_set_frame(0);
+    }
+  }
+}
+
+/* file system */
 
 char *
 readline(const char *prompt)
@@ -573,6 +651,23 @@ int main (int argc, char **argv)
         for(int i = 0; i < MAP_SIZE; i++){
           vga_mem[i] = 0xFF;
         }
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "draw_clear_all")) {
+        for (int frame = 0; frame < 4; frame++) {
+          vga_set_frame(frame);
+           for(int i = 0; i < MAP_SIZE; i++){
+              vga_mem[i] = 0x00;
+            }
+        }
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "draw_life")) {
+        vga_set_frame(0);
+        life_init();
+        life_print_board();
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "evolve")) {
+        vga_set_frame(0);
+        life_continuous_evolve();
         vga_set_frame(0);
       }else {
         // TODO more here!
