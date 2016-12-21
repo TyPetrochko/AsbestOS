@@ -24,6 +24,11 @@
 char k_buff[MAX_BUF];
 spinlock_t k_buff_lock; 
 
+static inline void outw(int port, uint16_t data)
+{
+  __asm __volatile("outw %0,%w1" : : "a" (data), "d" (port));
+}
+
 /**
  * This function is not a system call handler, but an auxiliary function
  * used by sys_open.
@@ -127,11 +132,6 @@ void sys_vga_map(tf_t *tf)
   
   syscall_set_errno(tf, E_SUCC);
   syscall_set_retval1(tf, 0);
-}
-
-static inline void outw(int port, uint16_t data)
-{
-  __asm __volatile("outw %0,%w1" : : "a" (data), "d" (port));
 }
 
 void sys_switch_mode(tf_t *tf) {
