@@ -543,21 +543,37 @@ int main (int argc, char **argv)
         echo(arg_array, arg_count, buff);
       } else if (!strcmp(arg_array[0], "video")){
         sys_switch_mode(1);
+        vga_set_frame(0);
         // for(int i = 0; i < MAP_SIZE; i++){
         //   vga_mem[i] = 0x11;
         // }
       } else if (!strcmp(arg_array[0], "novideo")){
         sys_switch_mode(0);
-      }else if (!strcmp(arg_array[0], "draw")) {
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "draw2")) {
         vga_set_frame(2);
-        for(int i = 0; i < MAP_SIZE/16; i++){
-          vga_mem[i] = 0xF1;
+        for(int i = 0; i < MAP_SIZE; i++){
+          vga_mem[i] = 0xFF;
         }
-      }else if (!strcmp(arg_array[0], "draw_more")) {
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "draw3")) {
         vga_set_frame(3);
-        for(int i = 0; i < MAP_SIZE/16; i++){
-          vga_mem[i] = 0xF1;
+        for(int i = 0; i < MAP_SIZE; i++){
+          vga_mem[i] = 0xFF;
         }
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "draw1")) {
+        vga_set_frame(1);
+        for(int i = 0; i < MAP_SIZE; i++){
+          vga_mem[i] = 0xFF;
+        }
+        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "draw0")) {
+        vga_set_frame(0);
+        for(int i = 0; i < MAP_SIZE; i++){
+          vga_mem[i] = 0xFF;
+        }
+        vga_set_frame(0);
       }else {
         // TODO more here!
         printf("unrecognized command: %s\n", arg_array[0]);

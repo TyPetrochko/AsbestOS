@@ -217,16 +217,17 @@ static inline void outw(int port, uint16_t data)
 }
 
 void out(int n){
-  outw(0x0005, 0x3ce);
+  KERN_DEBUG("out...\n");
+  outw( 0x3ce, 0x0005);
   
   switch(n){
-    case 0: outw(0x0102, 0x3c4);
+    case 0: outw( 0x3c4, 0x0102);
             break;
-    case 1: outw(0x0202, 0x3c4);
+    case 1: outw( 0x3c4, 0x0202);
             break;
-    case 2: outw(0x0402, 0x3c4);
+    case 2: outw( 0x3c4, 0x0402);
             break;
-    case 3: outw(0x0802, 0x3c4);
+    case 3: outw( 0x3c4, 0x0802);
             break;
     default: 
       KERN_PANIC("Bad out() value\n");
@@ -234,7 +235,7 @@ void out(int n){
 }
 
 void out_end(){
-  outw(0x0f02, 0x3c4);
+  outw( 0x3c4, 0x0f02);
 }
 
 // make it all go black
