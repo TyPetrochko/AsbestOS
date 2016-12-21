@@ -11,6 +11,7 @@
 #include <kern/trap/TSyscallArg/export.h>
 #include <kern/lib/spinlock.h>
 #include <kern/dev/video.h>
+#include <kern/dev/console.h>
 
 #include "dir.h"
 #include "path.h"
@@ -128,12 +129,18 @@ void sys_vga_map(tf_t *tf)
   syscall_set_retval1(tf, 0);
 }
 
+static inline void outw(int port, uint16_t data)
+{
+  __asm __volatile("outw %0,%w1" : : "a" (data), "d" (port));
+}
+
 void sys_switch_mode(tf_t *tf) {
   //KERN_DEBUG("called switch mode\n");
 
   int mode = syscall_get_arg2(tf);
 
   video_set_mode(mode);
+  outw( 0x3c4, 0x0f02);
   clear_screen();
 
   syscall_set_errno(tf, E_SUCC);
@@ -152,6 +159,13 @@ void sys_set_frame(tf_t *tf) {
     syscall_set_errno(tf, E_BADF);
     syscall_set_retval1(tf, -1);
   }
+}
+
+void sys_get_keyboard(tf_t *tf) {
+  int key = cons_getc();
+  //KERN_DEBUG("keyboard got: %d\n", key);
+  syscall_set_retval1(tf, key);
+  syscall_set_errno(tf, E_SUCC);
 }
 
 /**

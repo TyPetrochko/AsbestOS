@@ -152,6 +152,23 @@ sys_set_frame(int frame)
 }
 
 static gcc_inline int
+sys_get_keyboard(int frame)
+{
+	int errno;
+	size_t ret;
+
+	asm volatile("int %2"
+		     : "=a" (errno),
+		       "=b" (ret)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_get_keyboard),
+		       "b" (frame)
+		     : "cc", "memory");
+
+	return errno ? -1 : ret;
+}
+
+static gcc_inline int
 sys_write(int fd, char *p, int n)
 {
 	int errno;

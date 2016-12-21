@@ -115,6 +115,9 @@ void syscall_dispatch(tf_t *tf)
   case SYS_set_frame:
     sys_set_frame(tf);
     break;
+  case SYS_get_keyboard:
+    sys_get_keyboard(tf);
+    break;
   default:
     syscall_set_errno(tf, E_INVAL_CALLNR);
   }

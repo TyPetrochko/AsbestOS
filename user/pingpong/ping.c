@@ -14,6 +14,22 @@
 #define T_FILE 2   // File
 #define T_DEV  3   // Device
 
+// Special keycodes
+#define KEY_HOME  0xE0
+#define KEY_END   0xE1
+#define KEY_UP    0xE2
+#define KEY_DN    0xE3
+#define KEY_LF    0xE4
+#define KEY_RT    0xE5
+#define KEY_PGUP  0xE6
+#define KEY_PGDN  0xE7
+#define KEY_INS   0xE8
+#define KEY_DEL   0xE9
+
+#define SHIFT   (1<<0)
+#define CTL   (1<<1)
+#define ALT   (1<<2)
+
 static char linebuf[BUFLEN];
 int buffer_index;
 
@@ -36,6 +52,9 @@ void vga_set_frame(int frame) {
 #define GAME_HEIGHT 60
 #define GAME_WIDTH 80
 int board[GAME_HEIGHT][GAME_WIDTH];
+int cursor_x = 15; 
+int cursor_y = 15;
+
 void life_init() {
   for (int i = 0; i < GAME_HEIGHT; i++) {
     for (int j = 0; j < GAME_WIDTH; j++) {
@@ -48,9 +67,22 @@ void life_init() {
   board[11][23] = 1;
   board[12][21] = 1;
   board[13][22] = 1;
+  //draw initial board
+  for (int y = 0; y < GAME_HEIGHT; y++) {  
+    for (int x = 0; x < GAME_WIDTH; x++) {   
+      color_xy(x, y, (board[y][x] ? 0xFF : 0x00), 0);
+    }
+  }
 }
 
-void life_evolve() {
+void color_xy(x, y, value, plane) {
+  sys_set_frame(plane);
+  for(int i = 0; i < 8; i++){
+    vga_mem[(y*8 + i - 1) * GAME_WIDTH + x] = value;
+  }
+}
+
+void evolve_and_print() {
   int counts[GAME_HEIGHT][GAME_WIDTH];
   int new[GAME_HEIGHT][GAME_WIDTH];
   for (int y = 0; y < GAME_HEIGHT; y++) {  
@@ -85,29 +117,77 @@ void life_evolve() {
   //copy over
   for (int y = 0; y < GAME_HEIGHT; y++) {  
     for (int x = 0; x < GAME_WIDTH; x++) {
+      if (board[y][x] != new[y][x]) {
+        color_xy(x, y, (new[y][x] ? 0xFF : 0x00), 0);
+      }      
       board[y][x] = new[y][x];
     }
   }
 }
 
-void life_print_board() {
-  for (int y = 0; y < GAME_HEIGHT; y++) {  
-    for (int x = 0; x < GAME_WIDTH; x++) {
-      for(int i = 0; i < 8; i++){
-        vga_mem[(y*8 + i - 1) * GAME_WIDTH + x] = (board[y][x] ? 0xFF : 0x00);
-      }
+
+
+void life_setup() {
+  color_xy(cursor_x, cursor_y, 0xFF, 3);
+  int key;
+  while (1) {
+    key = sys_get_keyboard(0);
+    if (key == 'a') {
+      color_xy(cursor_x, cursor_y, 0x00, 3);
+      cursor_x = (cursor_x - 1 + GAME_WIDTH) % GAME_WIDTH;
+      color_xy(cursor_x, cursor_y, 0xFF, 3);
+    } else if (key == 'd') {
+      color_xy(cursor_x, cursor_y, 0x00, 3);
+      cursor_x = (cursor_x + 1) % GAME_WIDTH;
+      color_xy(cursor_x, cursor_y, 0xFF, 3);
+    } else if (key == 'w') {
+      color_xy(cursor_x, cursor_y, 0x00, 3);
+      cursor_y = (cursor_y - 1 + GAME_HEIGHT) % GAME_HEIGHT;
+      color_xy(cursor_x, cursor_y, 0xFF, 3);
+    } else if (key == 's') {
+      color_xy(cursor_x, cursor_y, 0x00, 3);
+      cursor_y = (cursor_y  + 1) % GAME_HEIGHT;
+      color_xy(cursor_x, cursor_y, 0xFF, 3);
+    } else if (key == 'b') {
+      sys_switch_mode(0);
+      return;
+    } else if (key == 'p') {
+      board[cursor_y][cursor_x] = 1;
+      color_xy(cursor_x, cursor_y, 0xFF, 0);
+    } else if (key == 't') {
+      board[cursor_y][cursor_x] = (board[cursor_y][cursor_x] ? 0 : 1);
+      color_xy(cursor_x, cursor_y, (board[cursor_y][cursor_x] ? 0xFF : 0x00), 0);
+    } else if (key == 'r') {
+       board[cursor_y][cursor_x] = 0;
+        color_xy(cursor_x, cursor_y, 0x00, 0);
+    } else if (key == 'g') {
+      color_xy(cursor_x, cursor_y, 0x00, 3);
+      life_continuous_evolve();
+      color_xy(cursor_x, cursor_y, 0xFF, 3);
     }
   }
 }
 
 void life_continuous_evolve() {
+  int key;
   while(1) {
-    life_evolve();
-    life_print_board();
-    for (int i = 0; i < 10; i++) {
+    evolve_and_print(); 
+    for (int i = 0; i < 16; i++) {
       sys_set_frame(0);
     }
+    if ((key = sys_get_keyboard(0)) != 0) {
+      //printf("got: %d\n", key);
+      if (key == (int) 'b') {
+        return;
+      }
+    }
   }
+}
+
+void life() {
+  sys_switch_mode(1);
+  life_init();
+  life_setup();
 }
 
 /* file system */
@@ -660,15 +740,9 @@ int main (int argc, char **argv)
             }
         }
         vga_set_frame(0);
-      }else if (!strcmp(arg_array[0], "draw_life")) {
-        vga_set_frame(0);
-        life_init();
-        life_print_board();
-        vga_set_frame(0);
-      }else if (!strcmp(arg_array[0], "evolve")) {
-        vga_set_frame(0);
-        life_continuous_evolve();
-        vga_set_frame(0);
+      }else if (!strcmp(arg_array[0], "life")) {
+        //vga_set_frame(0);
+        life();
       }else {
         // TODO more here!
         printf("unrecognized command: %s\n", arg_array[0]);

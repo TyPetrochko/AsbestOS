@@ -53,6 +53,7 @@ enum __syscall_nr {
   SYS_vga_map,
   SYS_switch_mode,
   SYS_set_frame,
+  SYS_get_keyboard,
   MAX_SYSCALL_NR	/* XXX: always put it at the end of __syscall_nr */
 };
 
