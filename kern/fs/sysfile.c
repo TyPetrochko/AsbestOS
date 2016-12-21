@@ -140,6 +140,20 @@ void sys_switch_mode(tf_t *tf) {
   syscall_set_retval1(tf, 0);
 }
 
+void sys_set_frame(tf_t *tf) {
+  KERN_DEBUG("called set frame\n");
+
+  int frame = syscall_get_arg2(tf);
+  if (frame < 4 && frame >= 0) {
+    out(frame);
+    syscall_set_errno(tf, E_SUCC);
+    syscall_set_retval1(tf, 0);
+  } else {
+    syscall_set_errno(tf, E_BADF);
+    syscall_set_retval1(tf, -1);
+  }
+}
+
 /**
  * Write n bytes of data in the user's buffer into the file indexed by the file descriptor.
  * You should first copy the data info an in-kernel buffer with pt_copyin and then

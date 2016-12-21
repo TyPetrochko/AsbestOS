@@ -20,8 +20,19 @@ int buffer_index;
 int get_filetype(char *path);
 void cp_r(char *src, char *dst, char *buff);
 
-int MAP_SIZE = 80*480;
-char vga_mem[80*480] __attribute__ ((aligned(PAGESIZE)));
+
+/* VGA interface */
+#define MAP_SIZE (80*480)
+char vga_mem[MAP_SIZE] __attribute__ ((aligned(PAGESIZE)));
+
+void vga_init() {
+  sys_vga_map(&vga_mem);
+}
+
+void vga_set_frame(int frame) {
+  sys_set_frame(frame);
+}
+/*               */
 
 char *
 readline(const char *prompt)
@@ -452,7 +463,7 @@ int main (int argc, char **argv)
     //setup vga mem TODO: put this somewhere else
     printf("trying to set up vga map\n");
     //n doesnt matter atm
-    sys_vga_map(&vga_mem);
+    vga_init();
     //try coloring
     // for(int i = 0; i < MAP_SIZE; i++){
     //   vga_mem[i] = 0x00;
@@ -538,8 +549,14 @@ int main (int argc, char **argv)
       } else if (!strcmp(arg_array[0], "novideo")){
         sys_switch_mode(0);
       }else if (!strcmp(arg_array[0], "draw")) {
+        vga_set_frame(2);
         for(int i = 0; i < MAP_SIZE/16; i++){
-          vga_mem[i] = 0x11;
+          vga_mem[i] = 0xF1;
+        }
+      }else if (!strcmp(arg_array[0], "draw_more")) {
+        vga_set_frame(3);
+        for(int i = 0; i < MAP_SIZE/16; i++){
+          vga_mem[i] = 0xF1;
         }
       }else {
         // TODO more here!

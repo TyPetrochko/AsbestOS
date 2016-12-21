@@ -135,6 +135,23 @@ sys_switch_mode(int mode)
 }
 
 static gcc_inline int
+sys_set_frame(int frame)
+{
+	int errno;
+	size_t ret;
+
+	asm volatile("int %2"
+		     : "=a" (errno),
+		       "=b" (ret)
+		     : "i" (T_SYSCALL),
+		       "a" (SYS_set_frame),
+		       "b" (frame)
+		     : "cc", "memory");
+
+	return errno ? -1 : ret;
+}
+
+static gcc_inline int
 sys_write(int fd, char *p, int n)
 {
 	int errno;

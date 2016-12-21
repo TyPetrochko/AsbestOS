@@ -112,6 +112,9 @@ void syscall_dispatch(tf_t *tf)
   case SYS_switch_mode:
     sys_switch_mode(tf);
     break;
+  case SYS_set_frame:
+    sys_set_frame(tf);
+    break;
   default:
     syscall_set_errno(tf, E_INVAL_CALLNR);
   }
