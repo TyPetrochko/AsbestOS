@@ -30,6 +30,9 @@
 #define CTL   (1<<1)
 #define ALT   (1<<2)
 
+#define DELAY 50 //iterations of syscall
+#define BLINK_DELAY 8000 //blink 
+
 static char linebuf[BUFLEN];
 int buffer_index;
 
@@ -54,6 +57,12 @@ void vga_set_frame(int frame) {
 int board[GAME_HEIGHT][GAME_WIDTH];
 int cursor_x = 15; 
 int cursor_y = 15;
+
+void delay() {
+  for (int i = 0; i < DELAY; i++) {
+    sys_set_frame(0);
+  }
+}
 
 void life_init() {
   for (int i = 0; i < GAME_HEIGHT; i++) {
@@ -128,26 +137,28 @@ void evolve_and_print() {
 
 
 void life_setup() {
-  color_xy(cursor_x, cursor_y, 0xFF, 3);
   int key;
+  int blink = 0;
+  int state = 1;
+  color_xy(cursor_x, cursor_y, 0xFF, 3);
   while (1) {
     key = sys_get_keyboard(0);
     if (key == 'a') {
-      color_xy(cursor_x, cursor_y, 0x00, 3);
+       color_xy(cursor_x, cursor_y, 0x00, 3);
       cursor_x = (cursor_x - 1 + GAME_WIDTH) % GAME_WIDTH;
-      color_xy(cursor_x, cursor_y, 0xFF, 3);
+      color_xy(cursor_x, cursor_y, (blink < BLINK_DELAY/2 ? 0xFF: 0x00), 3);
     } else if (key == 'd') {
-      color_xy(cursor_x, cursor_y, 0x00, 3);
+       color_xy(cursor_x, cursor_y, 0x00, 3);
       cursor_x = (cursor_x + 1) % GAME_WIDTH;
-      color_xy(cursor_x, cursor_y, 0xFF, 3);
+      color_xy(cursor_x, cursor_y, (blink < BLINK_DELAY/2 ? 0xFF: 0x00), 3);
     } else if (key == 'w') {
-      color_xy(cursor_x, cursor_y, 0x00, 3);
+       color_xy(cursor_x, cursor_y, 0x00, 3);
       cursor_y = (cursor_y - 1 + GAME_HEIGHT) % GAME_HEIGHT;
-      color_xy(cursor_x, cursor_y, 0xFF, 3);
-    } else if (key == 's') {
-      color_xy(cursor_x, cursor_y, 0x00, 3);
+      color_xy(cursor_x, cursor_y, (blink < BLINK_DELAY/2 ? 0xFF: 0x00), 3);
+    } else if (key == 's') { 
+     color_xy(cursor_x, cursor_y, 0x00, 3);   
       cursor_y = (cursor_y  + 1) % GAME_HEIGHT;
-      color_xy(cursor_x, cursor_y, 0xFF, 3);
+      color_xy(cursor_x, cursor_y, (blink < BLINK_DELAY/2 ? 0xFF: 0x00), 3);
     } else if (key == 'b') {
       sys_switch_mode(0);
       return;
@@ -165,6 +176,15 @@ void life_setup() {
       life_continuous_evolve();
       color_xy(cursor_x, cursor_y, 0xFF, 3);
     }
+    //delay();    
+    blink = (blink > BLINK_DELAY ? 0: blink + 1);
+    if (!blink && state == 0) {
+      color_xy(cursor_x, cursor_y, 0xFF, 3);
+      state = 1;
+    } else if (blink >= BLINK_DELAY/2 && state == 1) {
+      state = 0;
+      color_xy(cursor_x, cursor_y, 0x00, 3);
+    }
   }
 }
 
@@ -172,9 +192,7 @@ void life_continuous_evolve() {
   int key;
   while(1) {
     evolve_and_print(); 
-    for (int i = 0; i < 16; i++) {
-      sys_set_frame(0);
-    }
+    delay();
     if ((key = sys_get_keyboard(0)) != 0) {
       //printf("got: %d\n", key);
       if (key == (int) 'b') {
