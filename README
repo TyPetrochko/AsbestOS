@@ -6,7 +6,7 @@ List here the following info:
 
 Alex Ringlen and Tyler Petrochko completed this lab as partners. We chose project 1, video mode. For our demo, we implemented Conway's Game of Life. (https://en.wikipedia.org/wiki/Conway's_Game_of_Life)
 
-Tyler worked on enabling video mode in the bootloader, displaying data to the screen, and displaying the console text to the screen while not in "video mode." Alex worked on writing the syscalls necessary to map the VGA buffer, toggle video mode, set the frame to draw in, and accept keyboard input without blocking. He also worked on the implementation of Conway's Game of Life. 
+Tyler worked on enabling video mode in the bootloader, displaying data to the screen, and displaying the console text to the screen while not in "video mode." Alex worked on writing the syscalls necessary to map the VGA buffer/toggle video mode, set the frame to draw in, and accept keyboard input without blocking. He also worked on the implementation of Conway's Game of Life. 
 
 Our kernel-side video mode implementation is in video.c and video.h in kern/dev. The necessary syscalls are located in kern/fs/sysfile.c (as well as a number of related files), while our implementation of the shell and the Game of Life is located in user/pingpong/ping.c.
 
@@ -30,3 +30,4 @@ video - toggle video mode on (clears the console screen)
 novideo - toggle video mode off (console reappears and colors are cleared)
 draw0, draw1, draw2, draw3 -- fill the screen with color in the given plane
 
+From these you can confirm that the video mode works as intended, that all the colors can be drawn once in video mode, and that the vga buffer is unmapped once the video mode is toggled off (calling the draw functions in console mode has no effect.)

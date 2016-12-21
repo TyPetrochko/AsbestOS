@@ -101,24 +101,7 @@ sys_read(int fd, char *buf, size_t n)
 }
 
 static gcc_inline int
-sys_vga_map(unsigned int start_address)
-{
-	int errno;
-	size_t ret;
-
-	asm volatile("int %2"
-		     : "=a" (errno),
-		       "=b" (ret)
-		     : "i" (T_SYSCALL),
-		       "a" (SYS_vga_map),
-		       "b" (start_address)
-		     : "cc", "memory");
-
-	return errno ? -1 : ret;
-}
-
-static gcc_inline int
-sys_switch_mode(int mode)
+sys_switch_mode(int mode, unsigned int start_address)
 {
 	int errno;
 	size_t ret;
@@ -128,7 +111,8 @@ sys_switch_mode(int mode)
 		       "=b" (ret)
 		     : "i" (T_SYSCALL),
 		       "a" (SYS_switch_mode),
-		       "b" (mode)
+		       "b" (mode),
+		       "c" (start_address)
 		     : "cc", "memory");
 
 	return errno ? -1 : ret;

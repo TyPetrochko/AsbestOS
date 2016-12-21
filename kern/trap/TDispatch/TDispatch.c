@@ -106,9 +106,6 @@ void syscall_dispatch(tf_t *tf)
   case SYS_ls:
     sys_ls(tf);
     break;
-  case SYS_vga_map:
-    sys_vga_map(tf);
-    break;
   case SYS_switch_mode:
     sys_switch_mode(tf);
     break;

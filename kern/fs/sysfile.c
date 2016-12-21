@@ -29,6 +29,8 @@ static inline void outw(int port, uint16_t data)
   __asm __volatile("outw %0,%w1" : : "a" (data), "d" (port));
 }
 
+unsigned int vga_mapping_address;
+
 /**
  * This function is not a system call handler, but an auxiliary function
  * used by sys_open.
@@ -115,44 +117,55 @@ bad:
   return ;
 }
 
-void sys_vga_map(tf_t *tf)
-{
-  //KERN_DEBUG("called sys_vga_map\n");
-  unsigned int start_address;
-  int retval;
-
-  // get arg
-  start_address = syscall_get_arg2(tf);
-
-  for (int i = 0; i < 10; i++) { //10 comes from piazza, janky for now
-    if ((retval = map_page(get_curid(), start_address + (i * PAGESIZE), VGA_PAGE + i, 7)) != 0) {
-      KERN_DEBUG("map page has retval: %d on %dth mapping\n", retval, i);
-    }
-  }
-  
-  syscall_set_errno(tf, E_SUCC);
-  syscall_set_retval1(tf, 0);
-}
-
 void sys_switch_mode(tf_t *tf) {
   //KERN_DEBUG("called switch mode\n");
 
   int mode = syscall_get_arg2(tf);
+  unsigned int start_address;
+  int retval;
 
   video_set_mode(mode);
   outw( 0x3c4, 0x0f02);
   clear_screen();
 
+  //if video mode, map vga buffer
+  if (mode) {
+    start_address = syscall_get_arg3(tf);
+    vga_mapping_address = start_address;
+
+    for (int i = 0; i < 10; i++) {
+      if ((retval = map_page(get_curid(), start_address + (i * PAGESIZE), VGA_PAGE + i, 7)) != 0) {
+        KERN_DEBUG("map page has retval: %d on %dth mapping\n", retval, i);
+        goto bad;
+      }
+    }
+  } else {
+    for (int i = 0; i < 10; i++) {
+      unmap_page(get_curid(), vga_mapping_address + (i * PAGESIZE));
+    }
+    
+  }
+
   syscall_set_errno(tf, E_SUCC);
   syscall_set_retval1(tf, 0);
+  return;
+bad:
+  syscall_set_errno(tf, E_BADF);
+  syscall_set_retval1(tf, -1);
+  return;
 }
 
+//setting frame 4 resets frames
 void sys_set_frame(tf_t *tf) {
   //KERN_DEBUG("called set frame\n");
 
   int frame = syscall_get_arg2(tf);
-  if (frame < 4 && frame >= 0) {
-    out(frame);
+  if (frame < 5 && frame >= 0) {
+    if (frame == 4) {
+      outw( 0x3c4, 0x0f02);
+    } else {
+      out(frame);
+    }
     syscall_set_errno(tf, E_SUCC);
     syscall_set_retval1(tf, 0);
   } else {

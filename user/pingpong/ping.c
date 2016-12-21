@@ -44,10 +44,6 @@ void cp_r(char *src, char *dst, char *buff);
 #define MAP_SIZE (80*480)
 char vga_mem[MAP_SIZE] __attribute__ ((aligned(PAGESIZE)));
 
-void vga_init() {
-  sys_vga_map(&vga_mem);
-}
-
 void vga_set_frame(int frame) {
   sys_set_frame(frame);
 }
@@ -329,7 +325,7 @@ void life_setup() {
       cursor_y = (cursor_y  + 1) % GAME_HEIGHT;
       color_xy(cursor_x, cursor_y, (blink < BLINK_DELAY/2 ? 0xFF: 0x00), 3);
     } else if (key == 'b') {
-      sys_switch_mode(0);
+      sys_switch_mode(0, NULL);
       return;
     } else if (key == 'p') {
       board[cursor_y][cursor_x] = 1;
@@ -390,7 +386,7 @@ void life_continuous_evolve() {
 }
 
 void life() {
-  sys_switch_mode(1);
+  sys_switch_mode(1, &vga_mem);
   life_init();
   life_setup();
 }
@@ -821,10 +817,6 @@ int main (int argc, char **argv)
     char arg_array[MAXARGS][BUFLEN], buff[BUFLEN], cwd[BUFLEN];
     int arg_count, fd, read;
 
-    //setup vga mem TODO: put this somewhere else
-    printf("Setting up VGA map\n");
-    vga_init();
-
     // Try to read from current directory
     //  1) Sanity check
     //  2) sys_open initializes the disk log (if we omit this, mkdir fails)
@@ -890,33 +882,33 @@ int main (int argc, char **argv)
         // MKDIR
         echo(arg_array, arg_count, buff);
       } else if (!strcmp(arg_array[0], "video")){
-        sys_switch_mode(1);
+        sys_switch_mode(1, &vga_mem);
       } else if (!strcmp(arg_array[0], "novideo")){
-        sys_switch_mode(0);
+        sys_switch_mode(0, NULL);
       }else if (!strcmp(arg_array[0], "draw2")) {
         vga_set_frame(2);
         for(int i = 0; i < MAP_SIZE; i++){
           vga_mem[i] = 0xFF;
         }
-        vga_set_frame(0);
+        vga_set_frame(4);
       }else if (!strcmp(arg_array[0], "draw3")) {
         vga_set_frame(3);
         for(int i = 0; i < MAP_SIZE; i++){
           vga_mem[i] = 0xFF;
         }
-        vga_set_frame(0);
+        vga_set_frame(4);
       }else if (!strcmp(arg_array[0], "draw1")) {
         vga_set_frame(1);
         for(int i = 0; i < MAP_SIZE; i++){
           vga_mem[i] = 0xFF;
         }
-        vga_set_frame(0);
+        vga_set_frame(4);
       }else if (!strcmp(arg_array[0], "draw0")) {
         vga_set_frame(0);
         for(int i = 0; i < MAP_SIZE; i++){
           vga_mem[i] = 0xFF;
         }
-        vga_set_frame(0);
+        vga_set_frame(4);
       }else if (!strcmp(arg_array[0], "draw_clear_all")) {
         for (int frame = 0; frame < 4; frame++) {
           vga_set_frame(frame);
@@ -924,7 +916,7 @@ int main (int argc, char **argv)
               vga_mem[i] = 0x00;
             }
         }
-        vga_set_frame(0);
+        vga_set_frame(4);
       }else if (!strcmp(arg_array[0], "life")) {
         life();
       }else {

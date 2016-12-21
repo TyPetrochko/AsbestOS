@@ -50,7 +50,6 @@ enum __syscall_nr {
   SYS_unlink,
   SYS_stat,
   SYS_ls,
-  SYS_vga_map,
   SYS_switch_mode,
   SYS_set_frame,
   SYS_get_keyboard,
