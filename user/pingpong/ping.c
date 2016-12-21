@@ -20,6 +20,9 @@ int buffer_index;
 int get_filetype(char *path);
 void cp_r(char *src, char *dst, char *buff);
 
+int MAP_SIZE = 80*480;
+char vga_mem[80*480] __attribute__ ((aligned(PAGESIZE)));
+
 char *
 readline(const char *prompt)
 {
@@ -448,15 +451,19 @@ int main (int argc, char **argv)
 
     //setup vga mem TODO: put this somewhere else
     printf("trying to set up vga map\n");
-    int MAP_SIZE = 80*480;
-    char vga_mem[MAP_SIZE] __attribute__ ((aligned(PAGESIZE)));
     //n doesnt matter atm
     sys_vga_map(&vga_mem);
     //try coloring
     // for(int i = 0; i < MAP_SIZE; i++){
+    //   vga_mem[i] = 0x00;
+    // }
+    //sys_switch_mode(0);
+    // for(int i = 0; i < MAP_SIZE / 16; i++){
     //   vga_mem[i] = 0xAA;
     // }
-    sys_switch_mode(0);
+    // for(int i = 0; i < MAP_SIZE / 16; i++){
+    //   vga_mem[i] = 0xAA;
+    // }
 
 
     // Try to read from current directory
@@ -531,7 +538,7 @@ int main (int argc, char **argv)
       } else if (!strcmp(arg_array[0], "novideo")){
         sys_switch_mode(0);
       }else if (!strcmp(arg_array[0], "draw")) {
-        for(int i = 0; i < MAP_SIZE; i++){
+        for(int i = 0; i < MAP_SIZE/16; i++){
           vga_mem[i] = 0x11;
         }
       }else {
