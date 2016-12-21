@@ -4,82 +4,29 @@ List here the following info:
 3. brief description of what you have implemented;
 4. and anything else you would like us to know.
 
+Alex Ringlen and Tyler Petrochko completed this lab as partners. We chose project 1, video mode. For our demo, we implemented Conway's Game of Life. (https://en.wikipedia.org/wiki/Conway's_Game_of_Life)
 
-Alex Ringlen and Tyler Petrochko completed this lab as partners.
+Tyler worked on enabling video mode in the bootloader, displaying data to the screen, and displaying the console text to the screen while not in "video mode." Alex worked on writing the syscalls necessary to map the VGA buffer, toggle video mode, set the frame to draw in, and accept keyboard input without blocking. He also worked on the implementation of Conway's Game of Life. 
 
+Our kernel-side video mode implementation is in video.c and video.h in kern/dev. The necessary syscalls are located in kern/fs/sysfile.c (as well as a number of related files), while our implementation of the shell and the Game of Life is located in user/pingpong/ping.c.
 
-Alex coded parts 1-12, 15, and parts of 17. Tyler coded parts 13, 14, 16, and parts of 17. Of the features listed in step 17, Alex wrote code to support "cp", "mv", "rm", "rm -r", ">", and ">>", while Tyler wrote code to support "ls", "pwd", "cd", "mkdir", "cat", "touch", and "cp -r".
+Conway's Game of Life can be run from the shell using the command "life". Within the game there exists a setup phase in which the player can move a cursor and place blocks, as well as a simulation phase in which the board continuously evolves based on the rules of the game: a block which is alive and has 2 or 3 neighbors lives on, while a block which is dead (not colored) lives if it has exactly three neighbors. The controls are displayed in a help menu in game, but I have written them below as well:
 
-In part 2 we implemented thread_sleep and thread_wakeup, which provide functionality allowing threads to wait (with sleep) until a resource/channel is ready and to be woken up via thread_wakeup once that resource is available. In part 3 we modified the interrupt handler to interface with these new calls.
+-- Setup Phase --
+WASD - Move cursor
+P - Place cell
+R - Remove cell
+T - Toggle cell
+G - Start Simulation
+H - Toggle Help Menu
+B - Quit Game
 
-In part 9 we implemented dir_link and dir_lookup, functions useful for allowing the writing of information to the disk. dir_lookup finds the offset of a file by reading through a directory, and dir_link creates a new directory entry within the inode for a given directory.
+-- Simulation Phase --
+B - Pause and go to Setup Phase
 
-In part 10 we implemented skipelem and namex, functions involved in the parsing of path names. Skipelem sequentially returns path elements separated by '/'s, while namex returns an inode number by looking sequentially though each directory returned by skipelem.
+Outside of the Game of Life, we implemented a few other auxillary commands for the shell to test the color system and the video mode switch:
 
-In part 12, we implemented additional functionality in user/include/syscall.h and kern/lib/sysfile.c to add length parameters to system calls that involve passing a string to the kernel. 
+video - toggle video mode on (clears the console screen)
+novideo - toggle video mode off (console reappears and colors are cleared)
+draw0, draw1, draw2, draw3 -- fill the screen with color in the given plane
 
-In part 13 we implemented relevant system calls for reading and writing to files, allocating space for new files, closing and opening files, and getting status information from files (like whether or not a file is a directory.)
-
-In part 15 we added spinlocks to the system call implementation to support concurrency.
-
-In parts 16 and 17, we re-used the "ping" process from earlier in the semester to make a shell process, and implemented the sys_getc() system call.
-
-In part 17, we introduced two new system calls, sys_ls() and sys_getc(). We used sys_getc() to get user input from the keyboard, and sys_ls() to fill a buffer with files contained within a given directory. The remaining shell functionality was built on top of existing system calls.
-
-To implement ls, we simply use the sys_ls() system call on the current working directory, i.e. "." and print out the resulting files. For pwd, we keep track of the current directory path in a special buffer, and print the buffer to the console when the shell command "pwd" is entered. The "cd" command invokes the sys_chdir() system call, and updates the current directory buffer.
-
-The "cat" command is fairly straightfoward; it opens a file with sys_open(), reads the contents with sys_read() into a user buffer, then outputs the result to the console. We also implemented an additional shell command, "echo", which re-prints user input to the console. Touch is also fairly simple; it invokes sys_open() with the O_CREATE flag set, which results in a newly-made file.
-
-">" writes the first parsed argument to a file, the third argument, while ">>" appends. ">>" works by opening the target file with the O_RDWR flag and first reading to the end of the file, before writing the given content.
-
-"rm" simply unlinks the given file and checks the result. "rm -r" must recursively check all of the files in the directory by using "ls". If any of these are directories, a recursive call is made; otherwise, they are unlinked.
-
-"cp" must simply open the source file for writing and the destination for writing, and write the data from the source to the destination. The recursive option for "cp" is arguably the most complex operation; it involves recursively building path buffers as it traverses the directory trees of the source and destination argument, copying and files over appropriately. It makes heavy use of the sys_ls() system call, and parses the result.
-
-"mv" works by first using "cp" and then "rm"ing the original file.
-
-Example shell dialogue:
-
-      shell started.
-      shell in process 1
-      $ ls
-      README
-      $ mkdir a
-      $ mkdir b
-      $ cp README a/README2
-      $ potato > a/file1
-      $ tomato > a/file2
-      $ touch a/file3
-      $ cp -r a b
-      $ ls a
-      README2 file1 file2 file3
-      $ ls b
-      a
-      $ ls b/a
-      README2 file1 file2 file3
-      $ cat b/a/file1
-      potato
-      $ cd b/a
-      $ ls
-      README2 file1 file2 file3
-      $ pwd
-      /b/a
-      $ cd /
-      $ echo hello world!
-      hello world!
-      $ rm README
-      $ ls
-      a b
-      $ es >> a/file1
-      $ cat a/file1
-      potatoes
-      $ mv a/file1 a/filex
-      $ cat a/filex
-      potatoes
-      $ cat a/file3
-      
-      $ rm -r a
-      $ ls
-      b
-
-Note: the shell implementation is located in ping.c
